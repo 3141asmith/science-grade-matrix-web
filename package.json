@@ -1,0 +1,7 @@
+{
+  "name":"science-grade-matrix-web",
+  "version":"1.0.0",
+  "private":true,
+  "description":"Browser-based GCSE to A-level science grade analysis",
+  "scripts":{"start":"node server.cjs","test":"node tests/browser.test.cjs"}
+}
