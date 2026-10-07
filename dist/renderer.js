@@ -148,7 +148,7 @@ $('open').onclick = () => action($('open'), async () => { const data = await win
 $('sheet').onchange = chooseSheet;
 $('header').onchange = chooseHeader;
 $('calculate').onclick = () => action($('calculate'), calculate);
-$('save-pdf').onclick = () => { if ($('student-dialog')?.open) $('student-dialog').close(); window.print(); };
+$('save-pdf').onclick = () => action($('save-pdf'), async () => { await window.saveMatricesPDF(); status('PDF generated and sent to your browser downloads.'); });
 $('template').onclick = () => action($('template'), async () => { if (await window.grades.template()) status('Saved a blank Excel template. Add one row per student, then import it.'); });
 window.runSmoke = async data => {
   await chooseWorkbook(data);

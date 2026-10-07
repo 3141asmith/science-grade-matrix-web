@@ -1,10 +1,10 @@
 # Science Grade Matrix — website
 
-A browser version of the Windows app, with the same grade calculations, Excel import/export, optional Combined Science comparisons, fixed GCSE 9–4 rows and red–amber–green percentage colouring. Zero percentages have no colour.
+A browser version of the Windows app, with the same grade calculations, Excel import, direct PDF downloads, optional Combined Science comparisons, fixed GCSE 9–4 rows and red–amber–green percentage colouring. Zero percentages have no colour.
 
 ## Use
 
-Open the website, import an unencrypted `.xlsx` workbook, select the worksheet/header and map the six subject grade columns. Optionally map Combined Science GCSE. The same A-level column can be selected for multiple comparisons, for example comparing all three GCSE subjects against Physics A Level. Table titles and exported headings identify the selected columns. Tables appear automatically on import when all six default subject columns are detected. If a column is missing, select it manually. You can change any comparison and choose Produce percentage matrices to recalculate, then export the percentages, counts and exclusion lists to Excel. Save a blank template from the import panel.
+Open the website, import an unencrypted `.xlsx` workbook, select the worksheet/header and map the six subject grade columns. Optionally map Combined Science GCSE. The same A-level column can be selected for multiple comparisons, for example comparing all three GCSE subjects against Physics A Level. Table titles and exported headings identify the selected columns. Tables appear automatically on import when all six default subject columns are detected. If a column is missing, select it manually. You can change any comparison and choose Produce percentage matrices to recalculate, then use Save as PDF to download the titled, coloured matrices. Save a blank template from the import panel.
 
 One row represents one student. GCSE grades 9–1, A*–G and U are supported; A-level grades are A*–E and U. Combined Science accepts equal/adjacent double grades, including compact `99`, `98`, `A*A*` and `AB`. Missing or unrecognised pairs are excluded separately for each comparison. The screen always shows GCSE 9–4 or Combined Science 9–9 through 4–4, plus other grades with valid pairs. Empty rows show a dash.
 
@@ -28,4 +28,4 @@ Click a percentage to view its matching students in a popup, with names from the
 
 ## Save as PDF
 
-Choose **Save as PDF** above the results, then select **Save as PDF** in your browser?s print dialog. The print layout uses A4 landscape with one comparison table per page, including its title, student counts, coloured percentages and cohort notes. Mapping controls, buttons and student-name popups are omitted. Enable background graphics in the print dialog to retain cell colours, and disable browser headers/footers if you do not want the URL/date printed.
+Choose **Save as PDF** to download Science-grade-matrices.pdf directly. There is no print dialog. The report includes one landscape page per comparison, with its title, percentages, student counts, colours and cohort notes. Student-name popups are omitted. PDF generation runs entirely in the browser using bundled jsPDF 4.2.1 and jsPDF-AutoTable 5.0.8; their MIT licences are included in dist/vendor.
