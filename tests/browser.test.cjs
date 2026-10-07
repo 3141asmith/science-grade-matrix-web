@@ -23,6 +23,13 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await page.locator('#setup').waitFor({state:'visible'});
     await page.locator('#results').waitFor({state:'visible'});
     assert.equal(await page.locator('#matrices article').count(),6);
+    const exclusions = page.locator('#matrices article').first().locator('details');
+    await exclusions.locator('summary').click();
+    assert.equal(await exclusions.locator('th').first().textContent(),'Student name');
+    assert.deepEqual(await exclusions.locator('tr td:first-child').allTextContents(),['Example 11','Example 12']);
+    assert.match(await exclusions.textContent(),/Missing grade pair/);
+    assert.match(await exclusions.textContent(),/Unrecognised grade/);
+    await exclusions.locator('summary').click();
     assert.deepEqual(await page.locator('#matrices h3').allTextContents(),['Physics GCSE → Physics A Level','Biology GCSE → Biology A Level','Chemistry GCSE → Chemistry A Level','Combined Science GCSE → Physics A Level','Combined Science GCSE → Biology A Level','Combined Science GCSE → Chemistry A Level']);
     const data = await page.evaluate(() => {
       const tables = [...document.querySelectorAll('#matrices article .scroll table')];

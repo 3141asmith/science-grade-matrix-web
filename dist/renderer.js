@@ -137,8 +137,8 @@ function render(results) {
     card.append(node('p','GCSE grades 9–4 (double grades 9–9 to 4–4 for Combined Science) are always displayed, along with other grades that have valid pairs. A dash means no paired results. Percentages are rounded to one decimal place.'));
     if (result.issues.length) {
       const details = node('details'); details.append(node('summary', `Review ${result.issues.length} excluded pairs`));
-      const issues = node('table', undefined, 'issue-table'); const head = node('tr'); ['Excel row','Reason','GCSE value','A-level value'].forEach(h => head.append(node('th',h))); issues.append(head);
-      result.issues.slice(0,100).forEach(i => { const row = node('tr'); [i.row,i.reason,i.gcse,i.alevel].forEach(v => row.append(node('td',v))); issues.append(row); });
+      const issues = node('table', undefined, 'issue-table'); const head = node('tr'); ['Student name','Reason','GCSE value','A-level value'].forEach(h => head.append(node('th',h))); issues.append(head);
+      result.issues.slice(0,100).forEach(i => { const row = node('tr'); [i.name,i.reason,i.gcse,i.alevel].forEach(v => row.append(node('td',v))); issues.append(row); });
       details.append(issues); if (result.issues.length > 100) details.append(node('p','Showing the first 100 exclusions. Export to Excel for the complete list.')); card.append(details);
     }
     $('matrices').append(card);

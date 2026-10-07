@@ -36,8 +36,8 @@ async function writeResults(file, results) {
     sheet.getRow(4).font = { bold: true };
     sheet.views = [{ state: 'frozen', ySplit: 4, xSplit: 2 }];
     const issues = book.addWorksheet(`${result.sheetName || result.subject} exclusions`);
-    issues.addRow(['Excel row', 'Reason', 'GCSE value', 'A-level value']);
-    result.issues.forEach(i => issues.addRow([i.row, i.reason, i.gcse, i.alevel]));
+    issues.addRow(['Student name', 'Reason', 'GCSE value', 'A-level value']);
+    result.issues.forEach(i => issues.addRow([i.name, i.reason, i.gcse, i.alevel]));
     issues.columns.forEach(col => { col.width = 26; });
   }
   downloadWorkbook(await book.xlsx.writeBuffer(), file);

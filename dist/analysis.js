@@ -42,10 +42,10 @@ function analyse(rows, mapping) {
       const g = grade(rawG, level), a = grade(rawA, 'alevel');
       if (g === undefined || a === undefined) {
         invalid++;
-        issues.push({ row: number, reason: 'Unrecognised grade', gcse: String(rawG ?? ''), alevel: String(rawA ?? '') });
+        issues.push({ row: number, name: String(cells[0] ?? "").trim() || "(No name supplied)", reason: 'Unrecognised grade', gcse: String(rawG ?? ''), alevel: String(rawA ?? '') });
       } else if (g === null || a === null) {
         missing++;
-        issues.push({ row: number, reason: 'Missing grade pair', gcse: String(rawG ?? ''), alevel: String(rawA ?? '') });
+        issues.push({ row: number, name: String(cells[0] ?? "").trim() || "(No name supplied)", reason: 'Missing grade pair', gcse: String(rawG ?? ''), alevel: String(rawA ?? '') });
       } else {
         counts[g][a]++; included++;
         students[g][a].push({ name: String(cells[0] ?? '').trim() || '(No name supplied)', row: number, gcse: String(rawG), alevel: String(rawA) });
