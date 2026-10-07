@@ -29,3 +29,7 @@ Click a percentage to view its matching students in a popup, with names from the
 ## Save as PDF
 
 Choose **Save as PDF** to download Science-grade-matrices.pdf directly. There is no print dialog. The report includes one landscape page per comparison, with its title, percentages, student counts, colours and cohort notes. Student-name popups are omitted. PDF generation runs entirely in the browser using bundled jsPDF 4.2.1 and jsPDF-AutoTable 5.0.8; their MIT licences are included in dist/vendor.
+
+## Combined Science grouping
+
+Combined Science no longer creates additional tables. When a valid separate-subject GCSE grade is unavailable, its double grade is averaged and rounded to the nearest whole GCSE grade, with halves rounded upwards (8?7 becomes 8; 5?4 becomes 5). Equal/adjacent letter pairs stay on the letter scale, with ties assigned to the higher letter grade; no letter-to-number conversion is applied. A valid separate-subject grade takes priority, so a student is counted once per comparison. Student popups retain the original double grade. Only the three subject comparison tables are shown and downloaded in the PDF.

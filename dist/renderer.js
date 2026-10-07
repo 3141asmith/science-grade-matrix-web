@@ -88,7 +88,7 @@ function chooseHeader() {
   const combinedMatch = header.cells.findIndex(name => /combined|double\s*award/i.test(name));
   if (combinedMatch >= 0) combinedSelect.value = combinedMatch;
   combinedSelect.addEventListener('change', invalidate);
-  combinedLabel.append(combinedSelect); combinedRow.append(combinedLabel, node('p', 'Compared separately with Physics, Biology and Chemistry A level.')); $('mapping').append(combinedRow);
+  combinedLabel.append(combinedSelect); combinedRow.append(combinedLabel, node('p', 'Used when a subject GCSE grade is missing or invalid. The average double grade is rounded to the nearest grade, with halves rounded up.')); $('mapping').append(combinedRow);
   const table = node('table'); const head = node('tr'); head.append(node('th','Excel row'), ...header.cells.map((h,i) => node('th',h || `Column ${i+1}`))); table.append(head);
   sheet.rows.filter(r => r.number > header.number).slice(0,5).forEach(r => { const tr = node('tr'); tr.append(node('td',r.number), ...r.cells.map(c => node('td',c))); table.append(tr); });
   $('preview').append(table);
@@ -108,13 +108,12 @@ function render(results) {
     const card = node('article', undefined, 'card');
     const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.comparison || result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
     card.append(node('p', `Source: ${workbook.name}. Percentages describe observed outcomes among valid paired results. Colours are scaled within each row: green is the row maximum, amber is half that maximum, and red represents lower positive values; 0% has no colour.`, 'pdf-context'));
+    if ($('Combined-gcse').value !== '') card.append(node('p', `${result.combinedIncluded} paired results use Combined Science, averaged and rounded to the nearest grade (halves round up). A valid subject GCSE grade takes priority; each student is counted once per comparison.`));
     if (!result.included) card.append(node('p', 'No valid grade pairs for this subject. Check your mapping and grades.'));
     const table = node('table'); const thead = node('thead'); const heading = node('tr');
     ['GCSE grade','Students', ...result.matrix[0].cells.map(c => c.grade)].forEach(t => heading.append(node('th', t))); thead.append(heading); table.append(thead);
     const body = node('tbody');
-    const fixedGrades = result.subject.startsWith('Combined Science')
-      ? ['9-9','9-8','8-8','8-7','7-7','7-6','6-6','6-5','5-5','5-4','4-4']
-      : ['9','8','7','6','5','4'];
+    const fixedGrades = ['9','8','7','6','5','4'];
     for (const row of result.matrix.filter(r => r.total || fixedGrades.includes(r.grade))) {
       const tr = node('tr'); const label = node('th',row.grade); label.scope = 'row'; tr.append(label, node('td',row.total));
       const rowMaximum = Math.max(0, ...row.cells.map(cell => cell.percent ?? 0));
@@ -135,7 +134,7 @@ function render(results) {
     }
     table.append(body); const scroll = node('div', undefined, 'scroll'); scroll.append(table); card.append(scroll);
     if (result.matrix.some(r => r.total > 0 && r.total < 10)) card.append(node('p','Small cohorts: some rows contain fewer than 10 students, so percentages can change substantially with one result.','sample-note'));
-    card.append(node('p','GCSE grades 9–4 (double grades 9–9 to 4–4 for Combined Science) are always displayed, along with other grades that have valid pairs. A dash means no paired results. Percentages are rounded to one decimal place.'));
+    card.append(node('p','GCSE grades 9–4 are always displayed, along with other grades that have valid pairs. A dash means no paired results. Percentages are rounded to one decimal place.'));
     if (result.issues.length) {
       const details = node('details'); details.append(node('summary', `Review ${result.issues.length} excluded pairs`));
       const issues = node('table', undefined, 'issue-table'); const head = node('tr'); ['Student name','Reason','GCSE value','A-level value'].forEach(h => head.append(node('th',h))); issues.append(head);
@@ -155,7 +154,6 @@ window.runSmoke = async data => {
   await chooseWorkbook(data);
   const analysed = await calculate();
   const aStar = analysed.results[0].matrix.find(r => r.grade === 'A*');
-  const combined = analysed.results[3]?.matrix.find(r => r.grade === '9-9');
   const tables = [...document.querySelectorAll('#matrices article .scroll table')];
   const displayOk = tables.every((table,i) => {
     const labels = [...table.querySelectorAll('tbody th')].map(th => th.textContent);
@@ -166,5 +164,5 @@ window.runSmoke = async data => {
     const value = td.querySelector('strong').textContent;
     return value === '0.0%' || value === '—' ? td.style.backgroundColor === '' : getComputedStyle(td).backgroundColor !== 'rgba(0, 0, 0, 0)';
   }));
-  return { ok: coloursOk && displayOk && document.querySelectorAll('#matrices article').length === 6 && aStar.cells[0].percent === 25 && aStar.total === 4 && analysed.results[0].missing === 1 && analysed.results[0].invalid === 1 && combined?.total === 4 && combined.cells[0].percent === 25, coloursOk, displayOk, subjects: analysed.results.map(r => r.subject), aStar, combined };
+  return { ok: coloursOk && displayOk && document.querySelectorAll('#matrices article').length === 3 && aStar.cells[0].percent === 25 && aStar.total === 4 && analysed.results[0].missing === 1 && analysed.results[0].invalid === 1, coloursOk, displayOk, subjects: analysed.results.map(r => r.subject), aStar };
 };

@@ -22,7 +22,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await (await chooser).setFiles({name:'example.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(bytes)});
     await page.locator('#setup').waitFor({state:'visible'});
     await page.locator('#results').waitFor({state:'visible'});
-    assert.equal(await page.locator('#matrices article').count(),6);
+    assert.equal(await page.locator('#matrices article').count(),3);
     const exclusions = page.locator('#matrices article').first().locator('details');
     await exclusions.locator('summary').click();
     assert.equal(await exclusions.locator('th').first().textContent(),'Student name');
@@ -30,7 +30,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.match(await exclusions.textContent(),/Missing grade pair/);
     assert.match(await exclusions.textContent(),/Unrecognised grade/);
     await exclusions.locator('summary').click();
-    assert.deepEqual(await page.locator('#matrices h3').allTextContents(),['Physics GCSE → Physics A Level','Biology GCSE → Biology A Level','Chemistry GCSE → Chemistry A Level','Combined Science GCSE → Physics A Level','Combined Science GCSE → Biology A Level','Combined Science GCSE → Chemistry A Level']);
+    assert.deepEqual(await page.locator('#matrices h3').allTextContents(),['Physics GCSE → Physics A Level','Biology GCSE → Biology A Level','Chemistry GCSE → Chemistry A Level']);
     const data = await page.evaluate(() => {
       const tables = [...document.querySelectorAll('#matrices article .scroll table')];
       return tables.map(t => ({headers:[...t.querySelectorAll('thead th')].slice(2).map(n => n.textContent),rows:[...t.querySelectorAll('tbody tr')].map(r => ({grade:r.querySelector('th').textContent,cells:[...r.querySelectorAll('td')].slice(1).map(td => ({text:td.querySelector('strong').textContent,colour:td.style.backgroundColor}))}))}));
@@ -55,9 +55,6 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await physicsStar.locator('button').nth(3).click();
     assert.match(await page.locator('#student-dialog').textContent(),/No students have this grade combination/);
     await page.locator('#student-dialog button', {hasText:'Close'}).click();
-    await page.locator('#matrices article').nth(3).locator('tbody tr').first().locator('button').nth(0).click();
-    assert.deepEqual(await page.locator('#student-dialog tbody tr').allTextContents(),['Example 19-9A*2']);
-    await page.keyboard.press('Escape');
     const out = path.join(__dirname,'../test-results'); await fs.mkdir(out,{recursive:true});
     await page.evaluate(() => { window.printCalls = 0; window.print = () => { window.printCalls++; }; });
     const pdfDownload = page.waitForEvent('download');
@@ -68,7 +65,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(await page.evaluate(() => window.printCalls),0);
     const pdf = await fs.readFile(path.join(out,'matrices.pdf'));
     assert.equal(pdf.subarray(0,4).toString(),'%PDF');
-    assert.equal((pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length,6);
+    assert.equal((pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length,3);
     const resultDownload = page.waitForEvent('download'); await page.evaluate(() => window.grades.export());
     const download = await resultDownload; await download.saveAs(path.join(out,'results.xlsx'));
     const exported = await fs.readFile(path.join(out,'results.xlsx'));
@@ -76,7 +73,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
       const book = new ExcelJS.Workbook(); await book.xlsx.load(new Uint8Array(bytes));
       return book.worksheets.map(s => ({name:s.name,rows:s.rowCount}));
     },Array.from(exported));
-    assert.equal(sheets.length,12); assert.equal(sheets.find(s => s.name === 'Combined Physics exclusions').rows,3);
+    assert.equal(sheets.length,6); assert.equal(sheets.find(s => s.name === 'Physics exclusions').rows,3);
     const templateDownload = page.waitForEvent('download'); await page.locator('#template').click();
     assert.equal((await templateDownload).suggestedFilename(),'Science-grades-template.xlsx');
     await page.locator('#Combined-gcse').selectOption(''); await page.locator('#calculate').click();
@@ -93,7 +90,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(shared[1].matrix.find(r => r.grade === '8').cells[0].percent,50);
     assert.equal(shared[2].matrix.find(r => r.grade === '7').cells[1].percent,50);
     await page.locator('#Combined-gcse').selectOption('7'); await page.locator('#calculate').click();
-    assert.equal(await page.locator('#matrices article').count(),6);
+    assert.equal(await page.locator('#matrices article').count(),3);
     assert.ok((await page.locator('#matrices h3').allTextContents()).every(title => title.endsWith('Physics A Level')));
     await page.locator('#Physics-alevel').selectOption('1'); await page.locator('#calculate').click();
     assert.match(await page.locator('#status').textContent(),/different GCSE and A-level/);
@@ -111,7 +108,20 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.ok(await page.locator('#results').isHidden());
     await page.locator('#Physics-alevel').selectOption('2'); await page.locator('#calculate').click();
     await page.locator('#results').waitFor({state:'visible'});
-    assert.equal(await page.locator('#matrices article').count(),6);
+    assert.equal(await page.locator('#matrices article').count(),3);
+    const merged = await page.evaluate(() => window.scienceAnalysis.analyse([
+      {number:2,cells:['Combined pupil','','A*','','B','','C','8-7']},
+      {number:3,cells:['Separate pupil','7','A','6','A','5','B','9-9']},
+      {number:4,cells:['Lower pupil','','B','','A','','B','5-4']},
+      {number:5,cells:['Invalid pupil','','A','','A','','A','9-7']}
+    ],{Physics:{gcse:1,alevel:2},Biology:{gcse:3,alevel:4},Chemistry:{gcse:5,alevel:6},Combined:{gcse:7}}));
+    assert.equal(merged.length,3);
+    assert.equal(merged[0].included,3); assert.equal(merged[0].combinedIncluded,2); assert.equal(merged[0].invalid,1);
+    assert.equal(merged[0].matrix.find(r => r.grade === '8').cells[0].students[0].gcse,'8-7');
+    assert.equal(merged[0].matrix.find(r => r.grade === '7').cells[1].count,1);
+    assert.equal(merged[0].matrix.find(r => r.grade === '5').cells[2].count,1);
+    assert.equal(merged[1].matrix.find(r => r.grade === '6').cells[1].count,1);
+    assert.equal(await page.evaluate(() => window.scienceAnalysis.combinedGrade('A*-A')),'A*');
     assert.deepEqual(errors,[]);
     console.log('PASS: Excel import/export, six matrices, fixed rows, colours, optional Combined Science, mapping errors and mobile layout.');
   } finally { await browser.close(); }
