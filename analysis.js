@@ -34,6 +34,7 @@ function analyse(rows, mapping) {
   if (combined !== undefined) comparisons.push(...SUBJECTS.map(subject => ({ subject: `Combined Science → ${subject}`, sheetName: `Combined ${subject}`, gcse: combined, alevel: mapping[subject].alevel, scale: COMBINED, level: 'combined' })));
   return comparisons.map(({ subject, sheetName, gcse, alevel, scale, level }) => {
     const counts = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, 0]))]));
+    const students = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, []]))]));
     let included = 0, missing = 0, invalid = 0;
     const issues = [];
     rows.forEach(({ number, cells }) => {
@@ -45,11 +46,14 @@ function analyse(rows, mapping) {
       } else if (g === null || a === null) {
         missing++;
         issues.push({ row: number, reason: 'Missing grade pair', gcse: String(rawG ?? ''), alevel: String(rawA ?? '') });
-      } else { counts[g][a]++; included++; }
+      } else {
+        counts[g][a]++; included++;
+        students[g][a].push({ name: String(cells[0] ?? '').trim() || '(No name supplied)', row: number, gcse: String(rawG), alevel: String(rawA) });
+      }
     });
     const matrix = scale.map(g => {
       const total = Object.values(counts[g]).reduce((sum, n) => sum + n, 0);
-      return { grade: g, total, cells: ALEVEL.map(a => ({ grade: a, count: counts[g][a], percent: total ? counts[g][a] / total * 100 : null })) };
+      return { grade: g, total, cells: ALEVEL.map(a => ({ grade: a, count: counts[g][a], percent: total ? counts[g][a] / total * 100 : null, students: students[g][a] })) };
     });
     return { subject, sheetName: sheetName || subject, included, missing, invalid, matrix, issues };
   });

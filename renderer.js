@@ -15,7 +15,32 @@ async function action(button, fn) {
   try { await fn(); } catch (error) { status(error.message.replace(/^Error invoking remote method '[^']+': Error: /, ''), true); }
   finally { button.disabled = false; }
 }
-function invalidate() { $('results').hidden = true; }
+function invalidate() { $('results').hidden = true; if ($('student-dialog')?.open) $('student-dialog').close(); }
+function showStudents(result, row, cell) {
+  let dialog = $('student-dialog');
+  if (!dialog) {
+    dialog = node('dialog'); dialog.id = 'student-dialog';
+    dialog.setAttribute('aria-labelledby', 'student-dialog-title');
+    document.body.append(dialog);
+  }
+  dialog.replaceChildren();
+  const header = node('div', undefined, 'section-title');
+  const title = node('h2', result.comparison || result.subject); title.id = 'student-dialog-title';
+  const close = node('button', 'Close', 'secondary'); close.type = 'button'; close.autofocus = true;
+  close.onclick = () => dialog.close(); header.append(title, close); dialog.append(header);
+  dialog.append(node('p', `GCSE ${row.grade} → A level ${cell.grade}: ${cell.percent.toFixed(1)}% (${cell.count} of ${row.total} students with this GCSE grade).`));
+  if (!cell.students.length) dialog.append(node('p', 'No students have this grade combination.'));
+  else {
+    const table = node('table'); const thead = node('thead'); const headings = node('tr');
+    ['Student name (first column)', 'GCSE grade', 'A-level grade', 'Excel row'].forEach(text => headings.append(node('th', text))); thead.append(headings); table.append(thead);
+    const body = node('tbody');
+    for (const student of cell.students) {
+      const tr = node('tr'); [student.name, student.gcse, student.alevel, student.row].forEach(value => tr.append(node('td', value))); body.append(tr);
+    }
+    table.append(body); const scroll = node('div', undefined, 'scroll'); scroll.append(table); dialog.append(scroll);
+  }
+  dialog.showModal();
+}
 async function chooseWorkbook(data) {
   workbook = data; invalidate(); $('setup').hidden = false;
   $('sheet').replaceChildren(...data.sheets.map((s,i) => { const o = node('option', s.name); o.value = i; return o; }));
@@ -94,7 +119,13 @@ function render(results) {
       for (const cell of row.cells) {
         const td = node('td', undefined, row.total ? undefined : 'empty');
         td.style.backgroundColor = percentageColour(cell.percent);
-        td.append(node('strong', cell.percent === null ? '—' : `${cell.percent.toFixed(1)}%`), node('small', `${cell.count} of ${row.total}`));
+        if (cell.percent === null) td.append(node('strong', '—'), node('small', `${cell.count} of ${row.total}`));
+        else {
+          const button = node('button', undefined, 'percentage-button'); button.type = 'button';
+          button.setAttribute('aria-label', `Show ${cell.count} students: ${result.comparison || result.subject}, GCSE ${row.grade}, A level ${cell.grade}, ${cell.percent.toFixed(1)} percent`);
+          button.append(node('strong', `${cell.percent.toFixed(1)}%`), node('small', `${cell.count} of ${row.total}`));
+          button.onclick = () => showStudents(result, row, cell); td.append(button);
+        }
         td.title = row.total ? `${result.subject}: ${cell.count} of ${row.total} students with GCSE ${row.grade} achieved A level ${cell.grade}.` : `No valid paired results for GCSE ${row.grade}; a percentage cannot be calculated.`;
         tr.append(td);
       }
