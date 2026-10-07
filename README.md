@@ -25,3 +25,7 @@ Install Playwright for development (`npm install --no-save playwright`) and its 
 Excel support uses the bundled [ExcelJS 4.4.0](https://github.com/exceljs/exceljs) browser build; its MIT licence is included in `dist/vendor/EXCELJS-LICENSE`. No student data or credentials belong in this repository.
 
 Click a percentage to view its matching students in a popup, with names from the first spreadsheet column, original GCSE/A-level values and Excel row numbers. Zero-percent cells show an empty list; rows without valid pairs have no clickable percentage. Close with the Close button or Escape. Student details remain in browser memory and are never uploaded.
+
+## Save as PDF
+
+Choose **Save as PDF** above the results, then select **Save as PDF** in your browser?s print dialog. The print layout uses A4 landscape with one comparison table per page, including its title, student counts, coloured percentages and cohort notes. Mapping controls, buttons and student-name popups are omitted. Enable background graphics in the print dialog to retain cell colours, and disable browser headers/footers if you do not want the URL/date printed.

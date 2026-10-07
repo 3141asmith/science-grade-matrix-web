@@ -47,7 +47,18 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.deepEqual(await page.locator('#student-dialog tbody tr').allTextContents(),['Example 19-9A*2']);
     await page.keyboard.press('Escape');
     const out = path.join(__dirname,'../test-results'); await fs.mkdir(out,{recursive:true});
-    const resultDownload = page.waitForEvent('download'); await page.locator('#export').click();
+    await page.evaluate(() => { window.printCalls = 0; window.print = () => { window.printCalls++; }; });
+    await page.getByRole('button', {name:'Save as PDF',exact:true}).click();
+    assert.equal(await page.evaluate(() => window.printCalls),1);
+    await page.emulateMedia({media:'print'});
+    assert.ok(await page.locator('#setup').isHidden());
+    assert.equal(await page.locator('#matrices article:visible').count(),6);
+    assert.equal(await page.locator('.pdf-context:visible').count(),6);
+    await page.pdf({path:path.join(out,'matrices.pdf'),preferCSSPageSize:true,printBackground:true});
+    const pdf = await fs.readFile(path.join(out,'matrices.pdf'));
+    assert.equal(pdf.subarray(0,4).toString(),'%PDF');
+    await page.emulateMedia({media:'screen'});
+    const resultDownload = page.waitForEvent('download'); await page.evaluate(() => window.grades.export());
     const download = await resultDownload; await download.saveAs(path.join(out,'results.xlsx'));
     const exported = await fs.readFile(path.join(out,'results.xlsx'));
     const sheets = await page.evaluate(async bytes => {
