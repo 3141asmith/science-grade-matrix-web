@@ -76,7 +76,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(sheets.length,6); assert.equal(sheets.find(s => s.name === 'Physics exclusions').rows,3);
     const templateDownload = page.waitForEvent('download'); await page.locator('#template').click();
     assert.equal((await templateDownload).suggestedFilename(),'Science-grades-template.xlsx');
-    await page.locator('#Combined-gcse').selectOption(''); await page.locator('#calculate').click();
+    assert.equal(await page.locator('#Combined-gcse').count(),0); await page.locator('#calculate').click();
     assert.equal(await page.locator('#matrices article').count(),3);
     await page.locator('#Biology-alevel').selectOption('2');
     await page.locator('#Chemistry-alevel').selectOption('2');
@@ -89,7 +89,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     ],{Physics:{gcse:0,alevel:1},Biology:{gcse:2,alevel:1},Chemistry:{gcse:4,alevel:1}}));
     assert.equal(shared[1].matrix.find(r => r.grade === '8').cells[0].percent,50);
     assert.equal(shared[2].matrix.find(r => r.grade === '7').cells[1].percent,50);
-    await page.locator('#Combined-gcse').selectOption('7'); await page.locator('#calculate').click();
+    await page.locator('#calculate').click();
     assert.equal(await page.locator('#matrices article').count(),3);
     assert.ok((await page.locator('#matrices h3').allTextContents()).every(title => title.endsWith('Physics A Level')));
     await page.locator('#Physics-alevel').selectOption('1'); await page.locator('#calculate').click();
