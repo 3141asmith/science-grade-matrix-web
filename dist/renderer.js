@@ -16,11 +16,14 @@ async function action(button, fn) {
   finally { button.disabled = false; }
 }
 function invalidate() { $('results').hidden = true; }
-function chooseWorkbook(data) {
+async function chooseWorkbook(data) {
   workbook = data; invalidate(); $('setup').hidden = false;
   $('sheet').replaceChildren(...data.sheets.map((s,i) => { const o = node('option', s.name); o.value = i; return o; }));
   status(`Imported ${data.name}. Select the worksheet, header and grade columns.`);
   chooseSheet();
+  const defaultsReady = subjects.every(subject => ['gcse','alevel'].every(level => $(`${subject}-${level}`)?.value !== '' && $(`${subject}-${level}`)?.value !== undefined));
+  if (defaultsReady) await calculate();
+  else if (!$('calculate').disabled) status(`Imported ${data.name}. Select the missing grade columns, then choose Produce percentage matrices.`);
 }
 function chooseSheet() {
   invalidate();
@@ -109,14 +112,14 @@ function render(results) {
     $('matrices').append(card);
   }
 }
-$('open').onclick = () => action($('open'), async () => { const data = await window.grades.open(); if (data) chooseWorkbook(data); });
+$('open').onclick = () => action($('open'), async () => { const data = await window.grades.open(); if (data) await chooseWorkbook(data); });
 $('sheet').onchange = chooseSheet;
 $('header').onchange = chooseHeader;
 $('calculate').onclick = () => action($('calculate'), calculate);
 $('export').onclick = () => action($('export'), async () => { if (await window.grades.export()) status('Saved the percentage matrices, counts and exclusion lists to Excel.'); });
 $('template').onclick = () => action($('template'), async () => { if (await window.grades.template()) status('Saved a blank Excel template. Add one row per student, then import it.'); });
 window.runSmoke = async data => {
-  chooseWorkbook(data);
+  await chooseWorkbook(data);
   const analysed = await calculate();
   const aStar = analysed.results[0].matrix.find(r => r.grade === 'A*');
   const combined = analysed.results[3]?.matrix.find(r => r.grade === '9-9');

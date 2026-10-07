@@ -21,9 +21,9 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     const chooser = page.waitForEvent('filechooser'); await page.locator('#open').click();
     await (await chooser).setFiles({name:'example.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(bytes)});
     await page.locator('#setup').waitFor({state:'visible'});
-    await page.locator('#calculate').click();
     await page.locator('#results').waitFor({state:'visible'});
     assert.equal(await page.locator('#matrices article').count(),6);
+    assert.deepEqual(await page.locator('#matrices h3').allTextContents(),['Physics GCSE → Physics A Level','Biology GCSE → Biology A Level','Chemistry GCSE → Chemistry A Level','Combined Science GCSE → Physics A Level','Combined Science GCSE → Biology A Level','Combined Science GCSE → Chemistry A Level']);
     const data = await page.evaluate(() => {
       const tables = [...document.querySelectorAll('#matrices article .scroll table')];
       return tables.map(t => ({headers:[...t.querySelectorAll('thead th')].slice(2).map(n => n.textContent),rows:[...t.querySelectorAll('tbody tr')].map(r => ({grade:r.querySelector('th').textContent,cells:[...r.querySelectorAll('td')].slice(1).map(td => ({text:td.querySelector('strong').textContent,colour:td.style.backgroundColor}))}))}));
@@ -67,6 +67,18 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.ok(await page.locator('#results').isHidden());
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    const unlabelled = await page.evaluate(async bytes => {
+      const book = new ExcelJS.Workbook(); await book.xlsx.load(new Uint8Array(bytes));
+      book.worksheets[0].getCell('C1').value = 'Unlabelled result';
+      return Array.from(new Uint8Array(await book.xlsx.writeBuffer()));
+    }, bytes);
+    const secondChooser = page.waitForEvent('filechooser'); await page.locator('#open').click();
+    await (await secondChooser).setFiles({name:'unlabelled.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(unlabelled)});
+    await page.waitForFunction(() => document.querySelector('#status').textContent.includes('Select the missing grade columns'));
+    assert.ok(await page.locator('#results').isHidden());
+    await page.locator('#Physics-alevel').selectOption('2'); await page.locator('#calculate').click();
+    await page.locator('#results').waitFor({state:'visible'});
+    assert.equal(await page.locator('#matrices article').count(),6);
     assert.deepEqual(errors,[]);
     console.log('PASS: Excel import/export, six matrices, fixed rows, colours, optional Combined Science, mapping errors and mobile layout.');
   } finally { await browser.close(); }
