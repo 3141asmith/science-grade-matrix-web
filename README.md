@@ -8,7 +8,7 @@ Open the website, import an unencrypted `.xlsx` workbook, select the worksheet/h
 
 One row represents one student. GCSE grades 9–1, A*–G and U are supported; A-level grades are A*–E and U. Combined Science accepts equal/adjacent double grades, including compact `99`, `98`, `A*A*` and `AB`. Missing or unrecognised pairs are excluded separately for each comparison. The screen always shows GCSE 9–4 or Combined Science 9–9 through 4–4, plus other grades with valid pairs. Empty rows show a dash.
 
-Colours blend from red at low positive percentages through amber at 50% to green at 100%; they describe percentage size, not outcome quality. Historical proportions are not individual predictions. Small cohorts are flagged.
+Colours scale separately within each row: its highest percentage is green (including ties), half that maximum is amber, and lower positive values blend towards red. Zero percentages stay uncoloured. Colours describe relative percentage size within that row, not outcome quality. Historical proportions are not individual predictions. Small cohorts are flagged.
 
 Files are processed entirely inside your browser and are never uploaded. There is no server database, analytics or external CDN. Refreshing or closing the page clears imported results. Browser downloads replace the desktop app's Save dialogs.
 

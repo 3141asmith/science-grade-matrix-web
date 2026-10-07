@@ -41,7 +41,12 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
       for (const row of table.rows) for (const cell of row.cells) assert.equal(Boolean(cell.colour), !['0.0%','—'].includes(cell.text));
     }
     assert.deepEqual(data[0].rows.find(r => r.grade === 'A*').cells.slice(0,3).map(c => c.text),['25.0%','50.0%','25.0%']);
-    assert.equal(data[0].rows.find(r => r.grade === 'A*').cells[1].colour,'rgb(255, 218, 135)');
+    assert.equal(data[0].rows.find(r => r.grade === 'A*').cells[1].colour,'rgb(135, 207, 163)');
+    assert.equal(data[0].rows.find(r => r.grade === 'A*').cells[0].colour,'rgb(255, 218, 135)');
+    for (const table of data) for (const row of table.rows) {
+      const maximum = Math.max(...row.cells.map(cell => parseFloat(cell.text) || 0));
+      if (maximum > 0) for (const cell of row.cells.filter(cell => parseFloat(cell.text) === maximum)) assert.equal(cell.colour,'rgb(135, 207, 163)');
+    }
     const physicsStar = page.locator('#matrices article').nth(0).locator('tbody tr').filter({has:page.locator('th', {hasText:/^A\*$/})});
     await physicsStar.locator('button').nth(1).click();
     await page.locator('#student-dialog').waitFor({state:'visible'});
