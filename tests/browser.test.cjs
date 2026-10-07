@@ -23,6 +23,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await page.locator('#setup').waitFor({state:'visible'});
     await page.locator('#results').waitFor({state:'visible'});
     assert.equal(await page.locator('#matrices article').count(),3);
+    assert.equal(await page.locator('#sheet, #header').count(),0);
     const exclusions = page.locator('#matrices article').first().locator('details');
     await exclusions.locator('summary').click();
     assert.equal(await exclusions.locator('th').first().textContent(),'Student name');
@@ -122,6 +123,20 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(merged[0].matrix.find(r => r.grade === '5').cells[2].count,1);
     assert.equal(merged[1].matrix.find(r => r.grade === '6').cells[1].count,1);
     assert.equal(await page.evaluate(() => window.scienceAnalysis.combinedGrade('A*-A')),'A*');
+    const multiSheet = await page.evaluate(async bytes => {
+      const original = new ExcelJS.Workbook(); await original.xlsx.load(new Uint8Array(bytes));
+      const book = new ExcelJS.Workbook(); book.addWorksheet('Instructions').addRow(['Read these instructions before use']);
+      const sheet = book.addWorksheet('Results'); sheet.addRow(['Student outcomes']); sheet.addRow([]);
+      original.worksheets[0].eachRow(row => sheet.addRow(row.values.slice(1)));
+      return Array.from(new Uint8Array(await book.xlsx.writeBuffer()));
+    },bytes);
+    const thirdChooser = page.waitForEvent('filechooser'); await page.locator('#open').click();
+    await (await thirdChooser).setFiles({name:'multiple-sheets.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(multiSheet)});
+    await page.waitForFunction(() => document.querySelector('#status').textContent.includes('Analysed') && document.querySelector('#status').textContent.includes('multiple-sheets.xlsx'));
+    assert.equal(await page.locator('#matrices article').count(),3);
+    assert.equal(await page.locator('#Physics-gcse').inputValue(),'1');
+    assert.equal(await page.evaluate(() => selectedSheet),1);
+    assert.equal(await page.evaluate(() => selectedHeader),3);
     assert.deepEqual(errors,[]);
     console.log('PASS: Excel import/export, six matrices, fixed rows, colours, optional Combined Science, mapping errors and mobile layout.');
   } finally { await browser.close(); }
