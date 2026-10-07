@@ -1,6 +1,7 @@
 const subjects = ['Physics', 'Biology', 'Chemistry'];
 const $ = id => document.getElementById(id);
 let workbook;
+let combinedColumn = -1;
 function node(tag, text, className) { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (className) n.className = className; return n; }
 function percentageColour(percent, rowMaximum = 100) {
   if (percent === null || percent <= 0) return '';
@@ -61,6 +62,7 @@ function chooseHeader() {
   const sheet = workbook.sheets[Number($('sheet').value)];
   const header = sheet.rows.find(r => r.number === Number($('header').value));
   $('mapping').replaceChildren(); $('preview').replaceChildren();
+  combinedColumn = -1;
   if (!header) { status('This worksheet is empty. Choose another worksheet.', true); $('calculate').disabled = true; return; }
   $('calculate').disabled = false;
   for (const subject of subjects) {
@@ -79,16 +81,7 @@ function chooseHeader() {
     }
     $('mapping').append(row);
   }
-  const combinedRow = node('div', undefined, 'mapping-row');
-  combinedRow.append(node('strong', 'Combined Science'));
-  const combinedLabel = node('label', 'GCSE column (optional)');
-  const combinedSelect = node('select'); combinedSelect.id = 'Combined-gcse';
-  const none = node('option', 'Do not include Combined Science'); none.value = ''; combinedSelect.append(none);
-  header.cells.forEach((name,i) => { const option = node('option', `${i+1}. ${name || '(blank header)'}`); option.value = i; combinedSelect.append(option); });
-  const combinedMatch = header.cells.findIndex(name => /combined|double\s*award/i.test(name));
-  if (combinedMatch >= 0) combinedSelect.value = combinedMatch;
-  combinedSelect.addEventListener('change', invalidate);
-  combinedLabel.append(combinedSelect); combinedRow.append(combinedLabel, node('p', 'Used when a subject GCSE grade is missing or invalid. The average double grade is rounded to the nearest grade, with halves rounded up.')); $('mapping').append(combinedRow);
+  combinedColumn = header.cells.findIndex(name => /combined|double\s*award/i.test(name));
   const table = node('table'); const head = node('tr'); head.append(node('th','Excel row'), ...header.cells.map((h,i) => node('th',h || `Column ${i+1}`))); table.append(head);
   sheet.rows.filter(r => r.number > header.number).slice(0,5).forEach(r => { const tr = node('tr'); tr.append(node('td',r.number), ...r.cells.map(c => node('td',c))); table.append(tr); });
   $('preview').append(table);
@@ -96,7 +89,7 @@ function chooseHeader() {
 async function calculate() {
   invalidate();
   const mapping = Object.fromEntries(subjects.map(s => [s, Object.fromEntries(['gcse','alevel'].map(l => [l, $(`${s}-${l}`).value === '' ? -1 : Number($(`${s}-${l}`).value)]))]));
-  if ($('Combined-gcse').value !== '') mapping.Combined = { gcse: Number($('Combined-gcse').value) };
+  if (combinedColumn >= 0) mapping.Combined = { gcse: combinedColumn };
   const data = await window.grades.analyse({ sheet: Number($('sheet').value), header: Number($('header').value), mapping });
   render(data.results); $('results').hidden = false;
   status(`Analysed ${data.rows} student rows from ${workbook.name}. Each subject uses its own valid paired results.`);
@@ -108,7 +101,7 @@ function render(results) {
     const card = node('article', undefined, 'card');
     const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.comparison || result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
     card.append(node('p', `Source: ${workbook.name}. Percentages describe observed outcomes among valid paired results. Colours are scaled within each row: green is the row maximum, amber is half that maximum, and red represents lower positive values; 0% has no colour.`, 'pdf-context'));
-    if ($('Combined-gcse').value !== '') card.append(node('p', `${result.combinedIncluded} paired results use Combined Science, averaged and rounded to the nearest grade (halves round up). A valid subject GCSE grade takes priority; each student is counted once per comparison.`));
+    if (combinedColumn >= 0) card.append(node('p', `${result.combinedIncluded} paired results use Combined Science, averaged and rounded to the nearest grade (halves round up). A valid subject GCSE grade takes priority; each student is counted once per comparison.`));
     if (!result.included) card.append(node('p', 'No valid grade pairs for this subject. Check your mapping and grades.'));
     const table = node('table'); const thead = node('thead'); const heading = node('tr');
     ['GCSE grade','Students', ...result.matrix[0].cells.map(c => c.grade)].forEach(t => heading.append(node('th', t))); thead.append(heading); table.append(thead);
