@@ -107,6 +107,7 @@ function render(results) {
   for (const result of results) {
     const card = node('article', undefined, 'card');
     const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.comparison || result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
+    card.append(node('p', `Source: ${workbook.name}. Percentages describe observed outcomes among valid paired results. Colours represent percentage size: red for low positive values, amber at 50%, green at 100%; 0% has no colour.`, 'pdf-context'));
     if (!result.included) card.append(node('p', 'No valid grade pairs for this subject. Check your mapping and grades.'));
     const table = node('table'); const thead = node('thead'); const heading = node('tr');
     ['GCSE grade','Students', ...result.matrix[0].cells.map(c => c.grade)].forEach(t => heading.append(node('th', t))); thead.append(heading); table.append(thead);
@@ -147,7 +148,7 @@ $('open').onclick = () => action($('open'), async () => { const data = await win
 $('sheet').onchange = chooseSheet;
 $('header').onchange = chooseHeader;
 $('calculate').onclick = () => action($('calculate'), calculate);
-$('export').onclick = () => action($('export'), async () => { if (await window.grades.export()) status('Saved the percentage matrices, counts and exclusion lists to Excel.'); });
+$('save-pdf').onclick = () => { if ($('student-dialog')?.open) $('student-dialog').close(); window.print(); };
 $('template').onclick = () => action($('template'), async () => { if (await window.grades.template()) status('Saved a blank Excel template. Add one row per student, then import it.'); });
 window.runSmoke = async data => {
   await chooseWorkbook(data);

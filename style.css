@@ -5,3 +5,16 @@
 @media(max-width:700px){header{padding:22px 5%}h1{font-size:28px}.buttons{flex-wrap:wrap}.settings{grid-template-columns:1fr}.mapping-row{grid-template-columns:1fr}.mapping-row strong{padding-top:8px}.subject-header{align-items:flex-start;flex-direction:column}.colour-key{flex-wrap:wrap}.card{padding:18px}.issue-table{display:block;overflow:auto}}
 
 .percentage-button{display:block;width:100%;background:transparent;color:inherit;border:0;padding:0;cursor:pointer}.percentage-button:hover{filter:none;text-decoration:underline}.percentage-button small{color:#42556b}#student-dialog{width:min(900px,94vw);max-height:85vh;overflow:auto;border:1px solid #bccbd9;border-radius:14px;padding:24px;color:#20304b}#student-dialog::backdrop{background:#13284099}#student-dialog td{white-space:normal;overflow-wrap:anywhere}#student-dialog .section-title{align-items:flex-start}#student-dialog h2{overflow-wrap:anywhere}
+
+@media print{
+@page{size:A4 landscape;margin:12mm}
+:root,body{background:white;color:#20304b;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body>header,body>footer,#setup,main>.card,#results>.section-title,#results>.notice,#results>.colour-key,#results>p,dialog,input,script{display:none!important}
+main{max-width:none;margin:0;padding:0}#results{display:block!important}#results[hidden]{display:none!important}
+#matrices .card{margin:0;padding:0;border:0;border-radius:0;box-shadow:none;break-after:page;page-break-after:always;break-inside:avoid}
+#matrices .card:last-child{break-after:auto;page-break-after:auto}
+.subject-header{display:flex;flex-direction:row;align-items:center;margin-bottom:12px}h3{font-size:18px}.counts{font-size:11px}
+.scroll{overflow:visible}table{width:100%;table-layout:fixed;white-space:normal}th,td{padding:5px 4px;font-size:10px}td strong{font-size:11px}td small{font-size:9px;margin-top:2px}.percentage-button{font-size:10px;text-decoration:none}
+#matrices details{display:none}#matrices p{font-size:10px;margin:8px 0;line-height:1.4}.sample-note{padding:6px}.subject-header h3{max-width:75%}
+}
+.pdf-context{display:none}@media print{#matrices .pdf-context{display:block}}
