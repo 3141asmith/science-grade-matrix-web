@@ -2,6 +2,7 @@ const subjects = ['Physics', 'Biology', 'Chemistry'];
 const $ = id => document.getElementById(id);
 let workbook;
 let combinedColumn = -1;
+let selectedSheet = 0, selectedHeader = 0;
 function node(tag, text, className) { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (className) n.className = className; return n; }
 function percentageColour(percent, rowMaximum = 100) {
   if (percent === null || percent <= 0) return '';
@@ -44,26 +45,26 @@ function showStudents(result, row, cell) {
 }
 async function chooseWorkbook(data) {
   workbook = data; invalidate(); $('setup').hidden = false;
-  $('sheet').replaceChildren(...data.sheets.map((s,i) => { const o = node('option', s.name); o.value = i; return o; }));
-  status(`Imported ${data.name}. Select the worksheet, header and grade columns.`);
-  chooseSheet();
+  let bestScore = -1;
+  selectedSheet = 0; selectedHeader = 0;
+  data.sheets.forEach((sheet, index) => sheet.rows.forEach(row => {
+    const names = row.cells.map(name => name.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const score = subjects.reduce((sum, subject) => sum + ['gcse','alevel'].filter(level => names.some(name => name.includes(subject.toLowerCase()) && (level === 'gcse' ? name.includes('gcse') : /alevel|a2/.test(name)))).length, 0);
+    if (score > bestScore) { bestScore = score; selectedSheet = index; selectedHeader = row.number; }
+  }));
+  status('Imported ' + data.name + '. Grade columns detected automatically.');
+  chooseHeader();
   const defaultsReady = subjects.every(subject => ['gcse','alevel'].every(level => $(`${subject}-${level}`)?.value !== '' && $(`${subject}-${level}`)?.value !== undefined));
   if (defaultsReady) await calculate();
   else if (!$('calculate').disabled) status(`Imported ${data.name}. Select the missing grade columns, then choose Produce percentage matrices.`);
 }
-function chooseSheet() {
-  invalidate();
-  const sheet = workbook.sheets[Number($('sheet').value)];
-  $('header').replaceChildren(...sheet.rows.map(r => { const o = node('option', `Row ${r.number}: ${r.cells.filter(Boolean).slice(0,3).join(' · ').slice(0,90)}`); o.value = r.number; return o; }));
-  chooseHeader();
-}
 function chooseHeader() {
   invalidate();
-  const sheet = workbook.sheets[Number($('sheet').value)];
-  const header = sheet.rows.find(r => r.number === Number($('header').value));
+  const sheet = workbook.sheets[selectedSheet];
+  const header = sheet.rows.find(r => r.number === selectedHeader);
   $('mapping').replaceChildren(); $('preview').replaceChildren();
   combinedColumn = -1;
-  if (!header) { status('This worksheet is empty. Choose another worksheet.', true); $('calculate').disabled = true; return; }
+  if (!header) { status('No nonempty worksheet was found. Import a workbook containing student grades.', true); $('calculate').disabled = true; return; }
   $('calculate').disabled = false;
   for (const subject of subjects) {
     const row = node('div', undefined, 'mapping-row'); row.append(node('strong', subject));
@@ -90,7 +91,7 @@ async function calculate() {
   invalidate();
   const mapping = Object.fromEntries(subjects.map(s => [s, Object.fromEntries(['gcse','alevel'].map(l => [l, $(`${s}-${l}`).value === '' ? -1 : Number($(`${s}-${l}`).value)]))]));
   if (combinedColumn >= 0) mapping.Combined = { gcse: combinedColumn };
-  const data = await window.grades.analyse({ sheet: Number($('sheet').value), header: Number($('header').value), mapping });
+  const data = await window.grades.analyse({ sheet: selectedSheet, header: selectedHeader, mapping });
   render(data.results); $('results').hidden = false;
   status(`Analysed ${data.rows} student rows from ${workbook.name}. Each subject uses its own valid paired results.`);
   return data;
@@ -138,8 +139,6 @@ function render(results) {
   }
 }
 $('open').onclick = () => action($('open'), async () => { const data = await window.grades.open(); if (data) await chooseWorkbook(data); });
-$('sheet').onchange = chooseSheet;
-$('header').onchange = chooseHeader;
 $('calculate').onclick = () => action($('calculate'), calculate);
 $('save-pdf').onclick = () => action($('save-pdf'), async () => { await window.saveMatricesPDF(); status('PDF generated and sent to your browser downloads.'); });
 $('template').onclick = () => action($('template'), async () => { if (await window.grades.template()) status('Saved a blank Excel template. Add one row per student, then import it.'); });
