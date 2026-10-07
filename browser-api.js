@@ -36,6 +36,12 @@ function downloadWorkbook(buffer, filename) {
       const rows = sheet.rows.filter(r => r.number > options.header);
       if (!rows.length) throw new Error('There are no student rows after this header.');
       results = window.scienceAnalysis.analyse(rows,options.mapping);
+      results.forEach((result, index) => {
+        const subject = window.scienceAnalysis.SUBJECTS[index % 3];
+        const pair = options.mapping[subject];
+        const gcse = index < 3 ? pair.gcse : options.mapping.Combined.gcse;
+        result.comparison = `${header.cells[gcse] || 'GCSE'} → ${header.cells[pair.alevel] || 'A level'}`;
+      });
       return { results, rows:rows.length };
     },
     async export() {

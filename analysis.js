@@ -22,8 +22,11 @@ function analyse(rows, mapping) {
     if (!pair || !Number.isInteger(pair.gcse) || !Number.isInteger(pair.alevel) || pair.gcse < 0 || pair.alevel < 0)
       throw new Error(`Select both grade columns for ${subject}.`);
     used.push(pair.gcse, pair.alevel);
+    if (pair.gcse === pair.alevel) throw new Error(`Choose different GCSE and A-level columns for ${subject}.`);
   }
-  if (new Set(used).size !== 6) throw new Error('Choose six different grade columns.');
+  const gcseColumns = SUBJECTS.map(subject => mapping[subject].gcse);
+  if (new Set(gcseColumns).size !== 3) throw new Error('Choose different GCSE columns for Physics, Biology and Chemistry.');
+  if (SUBJECTS.some(subject => gcseColumns.includes(mapping[subject].alevel))) throw new Error('An A-level column cannot also be used as a GCSE column.');
   const combined = mapping.Combined?.gcse;
   if (combined !== undefined && (!Number.isInteger(combined) || combined < 0 || used.includes(combined)))
     throw new Error('Choose a separate column for Combined Science GCSE.');

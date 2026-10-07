@@ -78,7 +78,7 @@ function render(results) {
   $('matrices').replaceChildren();
   for (const result of results) {
     const card = node('article', undefined, 'card');
-    const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
+    const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.comparison || result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
     if (!result.included) card.append(node('p', 'No valid grade pairs for this subject. Check your mapping and grades.'));
     const table = node('table'); const thead = node('thead'); const heading = node('tr');
     ['GCSE grade','Students', ...result.matrix[0].cells.map(c => c.grade)].forEach(t => heading.append(node('th', t))); thead.append(heading); table.append(thead);
