@@ -33,7 +33,7 @@
         willDrawPage:drawHeading,
         didDrawPage:() => {
           pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(70,87,108);
-          const note = 'Observed proportions among valid paired results; not individual predictions. Red = low positive %, amber = 50%, green = 100%; 0% has no colour.';
+          const note = 'Observed proportions among valid paired results; not individual predictions. Each row has its own colour scale: green = row maximum; amber = half that maximum; red = lower positive values. 0% has no colour.';
           pdf.text(pdf.splitTextToSize(note,270),12,192);
           const small = article.querySelector('.sample-note');
           if (small) pdf.text(plain(small.textContent),12,197);

@@ -2,9 +2,9 @@ const subjects = ['Physics', 'Biology', 'Chemistry'];
 const $ = id => document.getElementById(id);
 let workbook;
 function node(tag, text, className) { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (className) n.className = className; return n; }
-function percentageColour(percent) {
+function percentageColour(percent, rowMaximum = 100) {
   if (percent === null || percent <= 0) return '';
-  const value = Math.min(100, percent);
+  const value = Math.min(100, percent / rowMaximum * 100);
   const red = [248, 171, 166], amber = [255, 218, 135], green = [135, 207, 163];
   const [start, end, blend] = value <= 50 ? [red, amber, value / 50] : [amber, green, (value - 50) / 50];
   return `rgb(${start.map((channel, i) => Math.round(channel + (end[i] - channel) * blend)).join(', ')})`;
@@ -107,7 +107,7 @@ function render(results) {
   for (const result of results) {
     const card = node('article', undefined, 'card');
     const title = node('div', undefined, 'subject-header'); title.append(node('h3', result.comparison || result.subject), node('span', `${result.included} paired · ${result.missing} missing · ${result.invalid} invalid`, 'counts')); card.append(title);
-    card.append(node('p', `Source: ${workbook.name}. Percentages describe observed outcomes among valid paired results. Colours represent percentage size: red for low positive values, amber at 50%, green at 100%; 0% has no colour.`, 'pdf-context'));
+    card.append(node('p', `Source: ${workbook.name}. Percentages describe observed outcomes among valid paired results. Colours are scaled within each row: green is the row maximum, amber is half that maximum, and red represents lower positive values; 0% has no colour.`, 'pdf-context'));
     if (!result.included) card.append(node('p', 'No valid grade pairs for this subject. Check your mapping and grades.'));
     const table = node('table'); const thead = node('thead'); const heading = node('tr');
     ['GCSE grade','Students', ...result.matrix[0].cells.map(c => c.grade)].forEach(t => heading.append(node('th', t))); thead.append(heading); table.append(thead);
@@ -117,9 +117,10 @@ function render(results) {
       : ['9','8','7','6','5','4'];
     for (const row of result.matrix.filter(r => r.total || fixedGrades.includes(r.grade))) {
       const tr = node('tr'); const label = node('th',row.grade); label.scope = 'row'; tr.append(label, node('td',row.total));
+      const rowMaximum = Math.max(0, ...row.cells.map(cell => cell.percent ?? 0));
       for (const cell of row.cells) {
         const td = node('td', undefined, row.total ? undefined : 'empty');
-        td.style.backgroundColor = percentageColour(cell.percent);
+        td.style.backgroundColor = percentageColour(cell.percent, rowMaximum);
         if (cell.percent === null) td.append(node('strong', '—'), node('small', `${cell.count} of ${row.total}`));
         else {
           const button = node('button', undefined, 'percentage-button'); button.type = 'button';
