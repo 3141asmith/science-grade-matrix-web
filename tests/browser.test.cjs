@@ -35,6 +35,17 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     }
     assert.deepEqual(data[0].rows.find(r => r.grade === 'A*').cells.slice(0,3).map(c => c.text),['25.0%','50.0%','25.0%']);
     assert.equal(data[0].rows.find(r => r.grade === 'A*').cells[1].colour,'rgb(255, 218, 135)');
+    const physicsStar = page.locator('#matrices article').nth(0).locator('tbody tr').filter({has:page.locator('th', {hasText:/^A\*$/})});
+    await physicsStar.locator('button').nth(1).click();
+    await page.locator('#student-dialog').waitFor({state:'visible'});
+    assert.deepEqual(await page.locator('#student-dialog tbody tr').allTextContents(),['Example 2A*A3','Example 3A*A4']);
+    await page.keyboard.press('Escape'); assert.ok(await page.locator('#student-dialog').isHidden());
+    await physicsStar.locator('button').nth(3).click();
+    assert.match(await page.locator('#student-dialog').textContent(),/No students have this grade combination/);
+    await page.locator('#student-dialog button', {hasText:'Close'}).click();
+    await page.locator('#matrices article').nth(3).locator('tbody tr').first().locator('button').nth(0).click();
+    assert.deepEqual(await page.locator('#student-dialog tbody tr').allTextContents(),['Example 19-9A*2']);
+    await page.keyboard.press('Escape');
     const out = path.join(__dirname,'../test-results'); await fs.mkdir(out,{recursive:true});
     const resultDownload = page.waitForEvent('download'); await page.locator('#export').click();
     const download = await resultDownload; await download.saveAs(path.join(out,'results.xlsx'));

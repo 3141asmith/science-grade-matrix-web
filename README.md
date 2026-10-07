@@ -23,3 +23,5 @@ With Node.js installed, run `npm start`, then open http://127.0.0.1:4173. No dep
 Install Playwright for development (`npm install --no-save playwright`) and its Chromium browser (`npx playwright install chromium`), start the local server, then run `npm test`. `BROWSER_EXECUTABLE` can point to an existing Edge/Chrome installation. Tests cover real Excel import, all six matrices, colours, fixed rows, template and result downloads, exclusions, optional Combined Science, error handling and mobile overflow.
 
 Excel support uses the bundled [ExcelJS 4.4.0](https://github.com/exceljs/exceljs) browser build; its MIT licence is included in `dist/vendor/EXCELJS-LICENSE`. No student data or credentials belong in this repository.
+
+Click a percentage to view its matching students in a popup, with names from the first spreadsheet column, original GCSE/A-level values and Excel row numbers. Zero-percent cells show an empty list; rows without valid pairs have no clickable percentage. Close with the Close button or Escape. Student details remain in browser memory and are never uploaded.

@@ -3,3 +3,5 @@
 .colour-key{display:flex;align-items:center;gap:12px;margin:14px 0 22px;color:#52647a;font-size:13px}.colour-ramp{width:180px;height:14px;border-radius:7px;background:linear-gradient(to right,rgb(248,171,166),rgb(255,218,135),rgb(135,207,163))}
 
 @media(max-width:700px){header{padding:22px 5%}h1{font-size:28px}.buttons{flex-wrap:wrap}.settings{grid-template-columns:1fr}.mapping-row{grid-template-columns:1fr}.mapping-row strong{padding-top:8px}.subject-header{align-items:flex-start;flex-direction:column}.colour-key{flex-wrap:wrap}.card{padding:18px}.issue-table{display:block;overflow:auto}}
+
+.percentage-button{display:block;width:100%;background:transparent;color:inherit;border:0;padding:0;cursor:pointer}.percentage-button:hover{filter:none;text-decoration:underline}.percentage-button small{color:#42556b}#student-dialog{width:min(900px,94vw);max-height:85vh;overflow:auto;border:1px solid #bccbd9;border-radius:14px;padding:24px;color:#20304b}#student-dialog::backdrop{background:#13284099}#student-dialog td{white-space:normal;overflow-wrap:anywhere}#student-dialog .section-title{align-items:flex-start}#student-dialog h2{overflow-wrap:anywhere}
