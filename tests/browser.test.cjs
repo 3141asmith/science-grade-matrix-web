@@ -48,8 +48,22 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal((await templateDownload).suggestedFilename(),'Science-grades-template.xlsx');
     await page.locator('#Combined-gcse').selectOption(''); await page.locator('#calculate').click();
     assert.equal(await page.locator('#matrices article').count(),3);
+    await page.locator('#Biology-alevel').selectOption('2');
+    await page.locator('#Chemistry-alevel').selectOption('2');
+    await page.locator('#calculate').click();
+    assert.equal(await page.locator('#matrices article').count(),3);
+    assert.deepEqual(await page.locator('#matrices h3').allTextContents(),['Physics GCSE → Physics A Level','Biology GCSE → Physics A Level','Chemistry GCSE → Physics A Level']);
+    const shared = await page.evaluate(() => window.scienceAnalysis.analyse([
+      {number:2,cells:['9','A*','8','U','7','B']},
+      {number:3,cells:['8','A','8','U','7','C']}
+    ],{Physics:{gcse:0,alevel:1},Biology:{gcse:2,alevel:1},Chemistry:{gcse:4,alevel:1}}));
+    assert.equal(shared[1].matrix.find(r => r.grade === '8').cells[0].percent,50);
+    assert.equal(shared[2].matrix.find(r => r.grade === '7').cells[1].percent,50);
+    await page.locator('#Combined-gcse').selectOption('7'); await page.locator('#calculate').click();
+    assert.equal(await page.locator('#matrices article').count(),6);
+    assert.ok((await page.locator('#matrices h3').allTextContents()).every(title => title.endsWith('Physics A Level')));
     await page.locator('#Physics-alevel').selectOption('1'); await page.locator('#calculate').click();
-    assert.match(await page.locator('#status').textContent(),/six different/);
+    assert.match(await page.locator('#status').textContent(),/different GCSE and A-level/);
     assert.ok(await page.locator('#results').isHidden());
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

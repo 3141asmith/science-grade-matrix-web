@@ -26,7 +26,7 @@ async function writeResults(file, results) {
   const book = new ExcelJS.Workbook();
   for (const result of results) {
     const sheet = book.addWorksheet(result.sheetName || result.subject);
-    sheet.addRow([`${result.subject}: observed A-level outcomes given GCSE grade`]);
+    sheet.addRow([`${result.comparison || result.subject}: observed A-level outcomes given GCSE grade`]);
     sheet.addRow(['Percentages use valid paired results only; historical proportions are not individual predictions.']);
     sheet.addRow(['Included', result.included, 'Missing', result.missing, 'Invalid', result.invalid]);
     sheet.addRow(['GCSE grade', 'Paired students', ...result.matrix[0].cells.map(c => `${c.grade} %`), ...result.matrix[0].cells.map(c => `${c.grade} count`)]);
