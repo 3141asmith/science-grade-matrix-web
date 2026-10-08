@@ -48,7 +48,8 @@ function downloadWorkbook(buffer, filename) {
       if (!imported) throw new Error('Import a workbook first.');
       const sheet = imported[options.sheet];
       if (!sheet || !sheet.rows.some(row => row.number === options.header)) throw new Error('Import a workbook with grade headers first.');
-      return window.scienceTrends.aggregate(sheet.rows.filter(row => row.number > options.header), options.columns);
+      const rows = sheet.rows.filter(row => row.number > options.header);
+      return [...window.scienceTrends.aggregate(rows, options.columns), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', options.combinedColumn)];
     },
     async export() {
       if (!results) throw new Error('Produce a matrix first.');
