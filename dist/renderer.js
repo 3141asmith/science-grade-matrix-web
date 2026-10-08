@@ -17,7 +17,7 @@ async function action(button, fn) {
   try { await fn(); } catch (error) { status(error.message.replace(/^Error invoking remote method '[^']+': Error: /, ''), true); }
   finally { button.disabled = false; }
 }
-function invalidate() { $('results').hidden = true; if ($('student-dialog')?.open) $('student-dialog').close(); }
+function invalidate() { $('results').hidden = true; if ($('trends-dialog')?.open) $('trends-dialog').close(); if ($('student-dialog')?.open) $('student-dialog').close(); }
 function showStudents(result, row, cell) {
   let dialog = $('student-dialog');
   if (!dialog) {
@@ -158,3 +158,5 @@ window.runSmoke = async data => {
   }));
   return { ok: coloursOk && displayOk && document.querySelectorAll('#matrices article').length === 3 && aStar.cells[0].percent === 25 && aStar.total === 4 && analysed.results[0].missing === 1 && analysed.results[0].invalid === 1, coloursOk, displayOk, subjects: analysed.results.map(r => r.subject), aStar };
 };
+
+$('trends').onclick = () => action($('trends'), () => window.showTrends());

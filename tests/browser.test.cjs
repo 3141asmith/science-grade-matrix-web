@@ -10,6 +10,8 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
   const errors = []; page.on('pageerror',error => errors.push(error.message));
   try {
     await page.goto('http://127.0.0.1:4173');
+    await page.getByRole('button',{name:'Trends',exact:true}).click();
+    assert.match(await page.locator('#status').textContent(),/Import a workbook/);
     const bytes = await page.evaluate(async () => {
       const original = window.downloadWorkbook;
       let buffer;
@@ -23,6 +25,29 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await page.locator('#setup').waitFor({state:'visible'});
     await page.locator('#results').waitFor({state:'visible'});
     assert.equal(await page.locator('#matrices article').count(),3);
+    await page.getByRole('button',{name:'Trends',exact:true}).click();
+    await page.locator('#trends-dialog').waitFor({state:'visible'});
+    assert.equal(await page.locator('#trends-dialog svg').count(),3);
+    assert.equal(await page.locator('#trends-dialog .trends-subject').count(),3);
+    assert.match(await page.locator('#trends-dialog').textContent(),/Biology/);
+    assert.match(await page.locator('#trends-dialog').textContent(),/2024/);
+    assert.match(await page.locator('#trends-dialog').textContent(),/2025/);
+    await page.keyboard.press('Escape');
+    const distributions = await page.evaluate(() => window.scienceTrends.aggregate([
+      {cells:['Alice','','A*','','B','','C','',2024]},
+      {cells:['Bob','','A','','U','','C','',2024]},
+      {cells:['Cara','','B','','A','','U','','2025/26']},
+      {cells:['Dan','','A','','A','','A','','']},
+      {cells:['Eve','','X','','A','','A','',2024]},
+      {cells:['Fred','','A','','A','','A','','not a year']}
+    ],{Physics:2,Biology:4,Chemistry:6}));
+    const physicsTrend = distributions.find(r => r.subject === 'Physics');
+    assert.equal(physicsTrend.years[0].total,2);
+    assert.equal(physicsTrend.years[0].counts['A*'],1);
+    assert.equal(physicsTrend.invalidGrade,1); assert.equal(physicsTrend.missingYear,1); assert.equal(physicsTrend.invalidYear,1);
+    assert.equal(distributions.find(r => r.subject === 'Biology').years[0].total,3);
+    assert.equal(distributions.find(r => r.subject === 'Chemistry').years[0].counts.C,2);
+    assert.equal(physicsTrend.years[1].year,'2025/26');
     assert.equal(await page.locator('#sheet, #header').count(),0);
     const exclusions = page.locator('#matrices article').first().locator('details');
     await exclusions.locator('summary').click();

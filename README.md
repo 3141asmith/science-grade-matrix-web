@@ -33,3 +33,7 @@ Choose **Save as PDF** to download Science-grade-matrices.pdf directly. There is
 ## Combined Science grouping
 
 Combined Science no longer creates additional tables. When a valid separate-subject GCSE grade is unavailable, its double grade is averaged and rounded to the nearest whole GCSE grade, with halves rounded upwards (8?7 becomes 8; 5?4 becomes 5). Equal/adjacent letter pairs stay on the letter scale, with ties assigned to the higher letter grade; no letter-to-number conversion is applied. A valid separate-subject grade takes priority, so a student is counted once per comparison. Student popups retain the original double grade. Only the three subject comparison tables are shown and downloaded in the PDF.
+
+## Trends
+
+The Trends button beside the template button opens Biology, Chemistry and Physics A-level distributions by year, using the currently selected A-level columns. Put a year in spreadsheet column 9 (for example 2024 or 2024/25); the blank template includes this column. Stacked bars show percentage distributions and cohort sizes; expandable tables show exact percentages and counts. GCSE grades are not required for trends. Missing/invalid years and A-level grades are excluded and reported separately. Student data remains in the browser.
