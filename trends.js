@@ -47,7 +47,14 @@
         bottom -= h;
         const rect = svgNode('rect',{x,y:bottom,width:barWidth,height:h,fill:result.colours[index]});
         rect.append(svgNode('title',{},`${year.year}: ${grade} — ${percent.toFixed(1)}% (${count} of ${year.total})`)); svg.append(rect);
-        if (h > 22) svg.append(svgNode('text',{x:x+barWidth/2,y:bottom+h/2+4,'text-anchor':'middle','font-size':12,fill:'#132840',stroke:'white','stroke-width':0.6,'paint-order':'stroke'},`${grade}: ${percent.toFixed(0)}%`));
+        // Use an opaque badge so every grade colour has the same readable label contrast.
+        if (h >= 30 && barWidth >= 80) {
+          const label = grade + ': ' + percent.toFixed(0) + '%';
+          const badgeWidth = Math.min(barWidth - 6, label.length * 7.5 + 14);
+          const centreX = x + barWidth/2, centreY = bottom + h/2;
+          svg.append(svgNode('rect',{x:centreX-badgeWidth/2,y:centreY-11,width:badgeWidth,height:22,rx:4,fill:'#132840'}));
+          svg.append(svgNode('text',{x:centreX,y:centreY+5,'text-anchor':'middle','font-size':14,'font-weight':600,fill:'#ffffff'},label));
+        }
       });
       svg.append(svgNode('text',{x:x+barWidth/2,y:262,'text-anchor':'middle','font-size':13,fill:'#20304b'},year.year),svgNode('text',{x:x+barWidth/2,y:282,'text-anchor':'middle','font-size':12,fill:'#52647a'},`n = ${year.total}`));
     });
