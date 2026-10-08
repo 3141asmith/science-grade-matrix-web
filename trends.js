@@ -65,11 +65,15 @@
     const header = node('div',undefined,'section-title'); const heading = node('h2','Grade distributions by year'); heading.id = 'trends-title';
     const close = node('button','Close','secondary'); close.type = 'button'; close.autofocus = true; close.onclick = () => dialog.close(); header.append(heading,close); dialog.append(header);
     dialog.append(node('p','Three A-level and three GCSE distributions using the currently selected columns. Years come from spreadsheet column 9. Each bar totals 100% of valid grades for that year, independently for each subject and qualification. GCSE graphs use the rounded Combined Science average when a valid subject GCSE grade is unavailable; A-level results are not required. Numeric and letter GCSE grades stay separate.'));
+    const pairs = new Map();
+    ['Biology','Chemistry','Physics'].forEach(subject => {
+      const pair = node('div',undefined,'trends-pair'); pair.setAttribute('aria-label',subject + ' trends'); pairs.set(subject,pair); dialog.append(pair);
+    });
     results.forEach(result => {
       const qualification = result.level === 'gcse' ? 'GCSE' : 'A level';
       const section = node('section',undefined,'trends-subject'); section.append(node('h3',`${result.subject} ${qualification} — ${$(`${result.subject}-${result.level}`).selectedOptions[0].textContent.replace(/^\d+\. /,'')}`));
       const legend = node('div',undefined,'trends-legend');
-      result.grades.forEach((grade,i) => { const label = node('span',grade); const swatch = node('i'); swatch.style.backgroundColor = result.colours[i]; label.prepend(swatch); legend.append(label); }); section.append(legend);
+      result.grades.forEach((grade,i) => { if (result.level === 'gcse' && !/^[1-9]$/.test(grade)) return; const label = node('span',grade); const swatch = node('i'); swatch.style.backgroundColor = result.colours[i]; label.prepend(swatch); legend.append(label); }); section.append(legend);
       if (!result.years.length) section.append(node('p',`No valid year and ${qualification} grade pairs. Add years to column 9 (for example 2024 or 2024/25).`));
       else {
         const scroll = node('div',undefined,'scroll'); scroll.append(chart(result)); section.append(scroll);
@@ -78,7 +82,7 @@
         result.years.forEach(year => { const tr = node('tr'); tr.append(node('td',year.year),node('td',year.total)); result.grades.forEach(g => tr.append(node('td',`${(year.counts[g]/year.total*100).toFixed(1)}% (${year.counts[g]})`))); table.append(tr); });
         const wrap = node('div',undefined,'scroll'); wrap.append(table); details.append(wrap); section.append(details);
       }
-      section.append(node('p',`Excluded: ${result.missingYear} missing year, ${result.invalidYear} invalid year, ${result.missingGrade} missing ${qualification} grade, ${result.invalidGrade} invalid ${qualification} grade.`)); dialog.append(section);
+      section.append(node('p',`Excluded: ${result.missingYear} missing year, ${result.invalidYear} invalid year, ${result.missingGrade} missing ${qualification} grade, ${result.invalidGrade} invalid ${qualification} grade.`)); pairs.get(result.subject).append(section);
     });
     dialog.showModal();
   };
