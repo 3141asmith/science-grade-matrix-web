@@ -29,7 +29,13 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await page.locator('#trends-dialog').waitFor({state:'visible'});
     assert.equal(await page.locator('#trends-dialog svg').count(),6);
     assert.equal(await page.locator('#trends-dialog .trends-subject').count(),6);
-    assert.deepEqual(await page.locator('#trends-dialog h3').allTextContents(),['Biology A level — Biology A Level','Chemistry A level — Chemistry A Level','Physics A level — Physics A Level','Biology GCSE — Biology GCSE','Chemistry GCSE — Chemistry GCSE','Physics GCSE — Physics GCSE']);
+    assert.equal(await page.locator('#trends-dialog .trends-pair').count(),3);
+    for (const pair of await page.locator('#trends-dialog .trends-pair').all()) {
+      const titles = await pair.locator('h3').allTextContents();
+      assert.match(titles[0],/A level/); assert.match(titles[1],/GCSE/);
+      assert.equal(titles[0].split(' ')[0],titles[1].split(' ')[0]);
+      assert.deepEqual(await pair.locator('.trends-subject').nth(1).locator('.trends-legend span').allTextContents(),['9','8','7','6','5','4','3','2','1']);
+    }
     assert.match(await page.locator('#trends-dialog').textContent(),/Biology/);
     assert.match(await page.locator('#trends-dialog').textContent(),/2024/);
     assert.match(await page.locator('#trends-dialog').textContent(),/2025/);
