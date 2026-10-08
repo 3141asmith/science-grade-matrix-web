@@ -48,8 +48,8 @@
         const rect = svgNode('rect',{x,y:bottom,width:barWidth,height:h,fill:result.colours[index]});
         rect.append(svgNode('title',{},`${year.year}: ${grade} — ${percent.toFixed(1)}% (${count} of ${year.total})`)); svg.append(rect);
         // Use an opaque badge so every grade colour has the same readable label contrast.
-        if (h >= 30 && barWidth >= 80) {
-          const label = grade + ': ' + percent.toFixed(0) + '%';
+        if (h >= 30 && barWidth >= 48) {
+          const label = percent.toFixed(0) + '%';
           const badgeWidth = Math.min(barWidth - 6, label.length * 7.5 + 14);
           const centreX = x + barWidth/2, centreY = bottom + h/2;
           svg.append(svgNode('rect',{x:centreX-badgeWidth/2,y:centreY-11,width:badgeWidth,height:22,rx:4,fill:'#132840'}));
