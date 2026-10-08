@@ -27,8 +27,9 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(await page.locator('#matrices article').count(),3);
     await page.getByRole('button',{name:'Trends',exact:true}).click();
     await page.locator('#trends-dialog').waitFor({state:'visible'});
-    assert.equal(await page.locator('#trends-dialog svg').count(),3);
-    assert.equal(await page.locator('#trends-dialog .trends-subject').count(),3);
+    assert.equal(await page.locator('#trends-dialog svg').count(),6);
+    assert.equal(await page.locator('#trends-dialog .trends-subject').count(),6);
+    assert.deepEqual(await page.locator('#trends-dialog h3').allTextContents(),['Biology A level — Biology A Level','Chemistry A level — Chemistry A Level','Physics A level — Physics A Level','Biology GCSE — Biology GCSE','Chemistry GCSE — Chemistry GCSE','Physics GCSE — Physics GCSE']);
     assert.match(await page.locator('#trends-dialog').textContent(),/Biology/);
     assert.match(await page.locator('#trends-dialog').textContent(),/2024/);
     assert.match(await page.locator('#trends-dialog').textContent(),/2025/);
@@ -48,6 +49,20 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(distributions.find(r => r.subject === 'Biology').years[0].total,3);
     assert.equal(distributions.find(r => r.subject === 'Chemistry').years[0].counts.C,2);
     assert.equal(physicsTrend.years[1].year,'2025/26');
+    const gcseTrends = await page.evaluate(() => window.scienceTrends.aggregate([
+      {cells:['Combined pupil','','','','','','','8-7',2024]},
+      {cells:['Separate pupil','6','','7','','5','','9-9',2024]},
+      {cells:['Letter pupil','A*','','A','','B','','',2025]},
+      {cells:['Missing pupil','','','','','','','',2025]},
+      {cells:['Invalid pupil','X','','X','','X','','9-7',2025]}
+    ],{Physics:1,Biology:3,Chemistry:5},'gcse',7));
+    const physicsGcse = gcseTrends.find(r => r.subject === 'Physics');
+    assert.equal(physicsGcse.years[0].total,2);
+    assert.equal(physicsGcse.years[0].counts['8'],1);
+    assert.equal(physicsGcse.years[0].counts['6'],1);
+    assert.equal(physicsGcse.years[1].counts['A*'],1);
+    assert.equal(physicsGcse.missingGrade,1); assert.equal(physicsGcse.invalidGrade,1);
+    assert.equal(gcseTrends.find(r => r.subject === 'Biology').years[0].counts['7'],1);
     assert.equal(await page.locator('#sheet, #header').count(),0);
     const exclusions = page.locator('#matrices article').first().locator('details');
     await exclusions.locator('summary').click();

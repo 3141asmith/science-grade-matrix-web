@@ -37,3 +37,6 @@ Combined Science no longer creates additional tables. When a valid separate-subj
 ## Trends
 
 The Trends button beside the template button opens Biology, Chemistry and Physics A-level distributions by year, using the currently selected A-level columns. Put a year in spreadsheet column 9 (for example 2024 or 2024/25); the blank template includes this column. Stacked bars show percentage distributions and cohort sizes; expandable tables show exact percentages and counts. GCSE grades are not required for trends. Missing/invalid years and A-level grades are excluded and reported separately. Student data remains in the browser.
+
+The Trends popup includes six graphs: Biology, Chemistry and Physics at both A level and GCSE. GCSE distributions use the selected GCSE columns, falling back to the rounded Combined Science average, and include valid GCSE grades even when A-level results are missing. Each graph has its own grade legend and denominator; numeric and letter GCSE scales remain separate.
+
