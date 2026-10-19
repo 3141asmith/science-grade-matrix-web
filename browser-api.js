@@ -26,6 +26,19 @@ function downloadWorkbook(buffer, filename) {
         input.click();
       });
     },
+    async readAdditional(file) {
+      if (!imported) throw new Error('Import the original workbook first.');
+      if (!/\.xlsx$/i.test(file.name) || file.size > 30*1024*1024) throw new Error('Use an .xlsx workbook smaller than 30 MB.');
+      window.grades.additional = await window.scienceWorkbook.readWorkbook(file);
+      return window.grades.additional.map(sheet=>({name:sheet.name,rows:sheet.rows.slice(0,30)}));
+    },
+    async mergeMaths(options) {
+      const source = window.grades.additional?.[options.additionalSheet], target=imported?.[options.sheet];
+      if(!source||!target)throw new Error('Import both spreadsheets first.');
+      const merged=window.scienceMerge.merge(target,options.header,source,options.additionalHeader,options.nameColumn,options.gradeColumn);
+      imported[options.sheet]=merged.sheet;results=null;
+      return {...merged,sheet:undefined,preview:{name:merged.sheet.name,rows:merged.sheet.rows.slice(0,30),total:merged.sheet.rows.length}};
+    },
     async analyse(options) {
       if (!imported) throw new Error('Import a workbook first.');
       results = null;
@@ -35,7 +48,8 @@ function downloadWorkbook(buffer, filename) {
       if (!header || Object.values(options.mapping).some(pair => Object.values(pair).some(n => n >= header.cells.length))) throw new Error('Choose valid columns.');
       const rows = sheet.rows.filter(r => r.number > options.header);
       if (!rows.length) throw new Error('There are no student rows after this header.');
-      results = window.scienceAnalysis.analyse(rows,options.mapping);
+      const mapping=Object.fromEntries(Object.entries(options.mapping).map(([key,pair])=>[key,{...pair,...(key==='Combined'?{}:{allowCombined:! /math/i.test(header.cells[pair.gcse] || '')})}]));
+      results = window.scienceAnalysis.analyse(rows,mapping);
       results.forEach((result, index) => {
         const subject = window.scienceAnalysis.SUBJECTS[index % 3];
         const pair = options.mapping[subject];
@@ -49,7 +63,9 @@ function downloadWorkbook(buffer, filename) {
       const sheet = imported[options.sheet];
       if (!sheet || !sheet.rows.some(row => row.number === options.header)) throw new Error('Import a workbook with grade headers first.');
       const rows = sheet.rows.filter(row => row.number > options.header);
-      return [...window.scienceTrends.aggregate(rows, options.columns), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', options.combinedColumn)];
+      const header=sheet.rows.find(row=>row.number===options.header);
+      const combined=Object.fromEntries(Object.entries(options.gcseColumns).map(([subject,column])=>[subject,/math/i.test(header.cells[column] || '') ? -1 : options.combinedColumn]));
+      return [...window.scienceTrends.aggregate(rows, options.columns), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', combined)];
     },
     async export() {
       if (!results) throw new Error('Produce a matrix first.');

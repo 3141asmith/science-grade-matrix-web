@@ -34,13 +34,12 @@ function analyse(rows, mapping) {
     if (pair.gcse === pair.alevel) throw new Error(`Choose different GCSE and A-level columns for ${subject}.`);
   }
   const gcseColumns = SUBJECTS.map(subject => mapping[subject].gcse);
-  if (new Set(gcseColumns).size !== 3) throw new Error('Choose different GCSE columns for Physics, Biology and Chemistry.');
   if (SUBJECTS.some(subject => gcseColumns.includes(mapping[subject].alevel))) throw new Error('An A-level column cannot also be used as a GCSE column.');
   const combined = mapping.Combined?.gcse;
   if (combined !== undefined && (!Number.isInteger(combined) || combined < 0 || used.includes(combined)))
     throw new Error('Choose a separate column for Combined Science GCSE.');
   const comparisons = SUBJECTS.map(subject => ({ subject, ...mapping[subject], scale: GCSE, level: 'gcse' }));
-  return comparisons.map(({ subject, sheetName, gcse, alevel, scale, level }) => {
+  return comparisons.map(({ subject, sheetName, gcse, alevel, scale, level, allowCombined = true }) => {
     const counts = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, 0]))]));
     const students = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, []]))]));
     let included = 0, missing = 0, invalid = 0, combinedIncluded = 0;
@@ -50,7 +49,7 @@ function analyse(rows, mapping) {
       const rawA = cells[alevel];
       let g = grade(rawG, level), fromCombined = false;
       const a = grade(rawA, 'alevel');
-      if (g == null && combined !== undefined) {
+      if (g == null && combined !== undefined && allowCombined) {
         const fallback = combinedGrade(cells[combined]);
         if (fallback != null || (g === null && fallback === undefined)) {
           rawG = cells[combined]; g = fallback; fromCombined = true;
