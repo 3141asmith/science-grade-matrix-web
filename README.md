@@ -36,11 +36,11 @@ Combined Science no longer creates additional tables. When a valid separate-subj
 
 ## Trends
 
-The Trends button beside the template button opens Biology, Chemistry and Physics A-level distributions by year, using the currently selected A-level columns. Put a year in spreadsheet column 9 (for example 2024 or 2024/25); the blank template includes this column. Stacked bars show percentage distributions and cohort sizes; expandable tables show exact percentages and counts. GCSE grades are not required for trends. Missing/invalid years and A-level grades are excluded and reported separately. Student data remains in the browser.
+The Trends button beside the template button opens Biology, Chemistry and Physics A-level distributions by year, using the currently selected A-level columns. Put a year in the detected Year column (column J in the template) (for example 2024 or 2024/25); the blank template includes this column. Stacked bars show percentage distributions and cohort sizes; expandable tables show exact percentages and counts. GCSE grades are not required for trends. Missing/invalid years and A-level grades are excluded and reported separately. Student data remains in the browser.
 
 The Trends popup includes six graphs: Biology, Chemistry and Physics at both A level and GCSE. GCSE distributions use the selected GCSE columns, falling back to the rounded Combined Science average, and include valid GCSE grades even when A-level results are missing. Each graph has its own grade legend and denominator; numeric and letter GCSE scales remain separate.
 
 
-## Additional GCSE Maths spreadsheet
+## GCSE Maths
 
-Import the original workbook, then choose Add GCSE Maths spreadsheet. Select the additional sheet, header, student-name column (first column by default) and Maths-grade column. Names are matched ignoring case and repeated spaces, without fuzzy matching. Duplicate names in either file and unmatched, missing or invalid entries are reported for review. The original student list is retained; students are not added or duplicated. A new GCSE Maths column is appended (existing columns remain intact). Select it in any or all GCSE dropdowns to compare Maths with the chosen A-level columns. Missing Maths grades remain missing and are not replaced with Combined Science. Files and matching stay in the browser; original files are unchanged. Repeated uploads append separate labelled columns.
+Include GCSE Maths in column I of the original workbook. It is available in all GCSE column dropdowns, including for comparing Maths with several A-level subjects. Missing Maths grades stay missing and do not use Combined Science fallback. The template includes GCSE Maths in I and Year in J. Trends detect a Year header wherever it is located; older workbooks with Year in I remain supported. Additional spreadsheet upload and name-matching have been removed.

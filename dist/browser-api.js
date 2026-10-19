@@ -26,19 +26,6 @@ function downloadWorkbook(buffer, filename) {
         input.click();
       });
     },
-    async readAdditional(file) {
-      if (!imported) throw new Error('Import the original workbook first.');
-      if (!/\.xlsx$/i.test(file.name) || file.size > 30*1024*1024) throw new Error('Use an .xlsx workbook smaller than 30 MB.');
-      window.grades.additional = await window.scienceWorkbook.readWorkbook(file);
-      return window.grades.additional.map(sheet=>({name:sheet.name,rows:sheet.rows.slice(0,30)}));
-    },
-    async mergeMaths(options) {
-      const source = window.grades.additional?.[options.additionalSheet], target=imported?.[options.sheet];
-      if(!source||!target)throw new Error('Import both spreadsheets first.');
-      const merged=window.scienceMerge.merge(target,options.header,source,options.additionalHeader,options.nameColumn,options.gradeColumn);
-      imported[options.sheet]=merged.sheet;results=null;
-      return {...merged,sheet:undefined,preview:{name:merged.sheet.name,rows:merged.sheet.rows.slice(0,30),total:merged.sheet.rows.length}};
-    },
     async analyse(options) {
       if (!imported) throw new Error('Import a workbook first.');
       results = null;
@@ -64,8 +51,10 @@ function downloadWorkbook(buffer, filename) {
       if (!sheet || !sheet.rows.some(row => row.number === options.header)) throw new Error('Import a workbook with grade headers first.');
       const rows = sheet.rows.filter(row => row.number > options.header);
       const header=sheet.rows.find(row=>row.number===options.header);
+      let yearColumn=header.cells.findIndex(name=>/^(?:academic|exam|cohort)?year$/i.test(String(name).replace(/[^a-z]/gi,'')));
+      if(yearColumn<0)yearColumn=/math/i.test(header.cells[8] || '') ? 9 : 8;
       const combined=Object.fromEntries(Object.entries(options.gcseColumns).map(([subject,column])=>[subject,/math/i.test(header.cells[column] || '') ? -1 : options.combinedColumn]));
-      return [...window.scienceTrends.aggregate(rows, options.columns), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', combined)];
+      return [...window.scienceTrends.aggregate(rows, options.columns, 'alevel', -1, yearColumn), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', combined, yearColumn)];
     },
     async export() {
       if (!results) throw new Error('Produce a matrix first.');

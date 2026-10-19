@@ -44,7 +44,7 @@ function showStudents(result, row, cell) {
   dialog.showModal();
 }
 async function chooseWorkbook(data) {
-  workbook = data; $('merge-report').hidden = true; invalidate(); $('setup').hidden = false;
+  workbook = data; invalidate(); $('setup').hidden = false;
   let bestScore = -1;
   selectedSheet = 0; selectedHeader = 0;
   data.sheets.forEach((sheet, index) => sheet.rows.forEach(row => {
@@ -161,4 +161,3 @@ window.runSmoke = async data => {
 
 $('trends').onclick = () => action($('trends'), () => window.showTrends());
 
-$('add-maths').onclick = () => action($('add-maths'), () => window.openMathsUpload());
