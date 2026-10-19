@@ -183,6 +183,34 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(await page.locator('#Physics-gcse').inputValue(),'1');
     assert.equal(await page.evaluate(() => selectedSheet),1);
     assert.equal(await page.evaluate(() => selectedHeader),3);
+    const mathsBytes=await page.evaluate(async()=>{
+      const book=new ExcelJS.Workbook();const sheet=book.addWorksheet('Maths results');
+      sheet.addRow(['Student name','GCSE Maths']);sheet.addRow(['  eXample   1 ',9]);
+      sheet.addRow(['Example 2',8]);sheet.addRow(['Example 2',7]);sheet.addRow(['New pupil',6]);
+      sheet.addRow(['Example 3','']);sheet.addRow(['Example 4','X']);
+      return Array.from(new Uint8Array(await book.xlsx.writeBuffer()));
+    });
+    const mathsChooser=page.waitForEvent('filechooser');await page.locator('#add-maths').click();
+    await (await mathsChooser).setFiles({name:'maths.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(mathsBytes)});
+    await page.locator('#maths-dialog').waitFor({state:'visible'});await page.locator('#merge-maths').click();
+    await page.waitForFunction(()=>document.querySelector('#merge-report').textContent.includes('1 Maths grades matched'));
+    await page.locator('#merge-report summary').click();
+    assert.match(await page.locator('#merge-report').textContent(),/Duplicate name/);
+    assert.match(await page.locator('#merge-report').textContent(),/No matching name/);
+    assert.match(await page.locator('#merge-report').textContent(),/Unrecognised Maths grade/);
+    for(const subject of ['Physics','Biology','Chemistry'])await page.locator(`#${subject}-gcse`).selectOption({label:'10. GCSE Maths'});
+    await page.locator('#calculate').click();await page.locator('#results').waitFor({state:'visible'});
+    assert.ok((await page.locator('#matrices h3').allTextContents()).every(title=>title.startsWith('GCSE Maths')));
+    const paired=await page.locator('#matrices .counts').allTextContents();assert.ok(paired.every(text=>text.startsWith('1 paired')));
+    await page.locator('#trends').click();await page.locator('#trends-dialog').waitFor({state:'visible'});
+    const mathsTrendTables=await page.locator('#trends-dialog .trends-pair .trends-subject:nth-child(2) details table').all();
+    assert.equal(mathsTrendTables.length,3);
+    for(const table of mathsTrendTables) assert.equal(await table.locator('tr').nth(1).locator('td').nth(1).textContent(),'1');
+    await page.keyboard.press('Escape');
+    const duplicates=await page.evaluate(()=>window.scienceMerge.merge({name:'Original',rows:[{number:1,cells:['Name','Grade']},{number:2,cells:['Same Name','8']},{number:3,cells:['same name','7']}]},1,{rows:[{number:1,cells:['Name','Maths']},{number:2,cells:['Same Name','9']}]},1,0,1));
+    assert.equal(duplicates.matched,0);assert.match(duplicates.issues[0].reason,/Duplicate name in original/);
+    await page.locator('#matrices article').first().locator('tbody tr').first().locator('button').first().click();
+    assert.match(await page.locator('#student-dialog').textContent(),/Example 1/);await page.keyboard.press('Escape');
     assert.deepEqual(errors,[]);
     console.log('PASS: Excel import/export, six matrices, fixed rows, colours, optional Combined Science, mapping errors and mobile layout.');
   } finally { await browser.close(); }

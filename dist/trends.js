@@ -7,14 +7,15 @@
     return ['Biology','Chemistry','Physics'].map(subject => {
       const years = new Map(); let missingYear = 0, invalidYear = 0, missingGrade = 0, invalidGrade = 0;
       const column = columns[subject];
+      const combined = typeof combinedColumn === 'object' ? combinedColumn[subject] : combinedColumn;
       if (!Number.isInteger(column) || column < 0) throw new Error(`Select a ${level === 'gcse' ? 'GCSE' : 'A-level'} column for ${subject} first.`);
       for (const row of rows) {
         const year = String(row.cells[8] ?? '').trim().replace(/[–—]/g,'-');
         if (!year) { missingYear++; continue; }
         if (!/^\d{4}(?:[/-](?:\d{2}|\d{4}))?$/.test(year)) { invalidYear++; continue; }
         let grade = window.scienceAnalysis.grade(row.cells[column],level);
-        if (level === 'gcse' && grade == null && combinedColumn >= 0) {
-          const fallback = window.scienceAnalysis.combinedGrade(row.cells[combinedColumn]);
+        if (level === 'gcse' && grade == null && combined >= 0) {
+          const fallback = window.scienceAnalysis.combinedGrade(row.cells[combined]);
           if (fallback != null || (grade === null && fallback === undefined)) grade = fallback;
         }
         if (grade === null) { missingGrade++; continue; }
