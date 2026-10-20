@@ -35,7 +35,7 @@ function downloadWorkbook(buffer, filename) {
       if (!header || Object.values(options.mapping).some(pair => Object.values(pair).some(n => n >= header.cells.length))) throw new Error('Choose valid columns.');
       const rows = sheet.rows.filter(r => r.number > options.header);
       if (!rows.length) throw new Error('There are no student rows after this header.');
-      const mapping=Object.fromEntries(Object.entries(options.mapping).map(([key,pair])=>[key,{...pair,...(key==='Combined'?{}:{allowCombined:! /math/i.test(header.cells[pair.gcse] || '')})}]));
+      const mapping=Object.fromEntries(Object.entries(options.mapping).map(([key,pair])=>[key,{...pair,...(key==='Combined'?{}:{allowCombined:! /math/i.test(header.cells[pair.gcse] || ''),outcomeLevel:/gcse|math/i.test(header.cells[pair.alevel] || '') ? 'gcse' : 'alevel',allowOutcomeCombined:/physics|biology|chemistry/i.test(header.cells[pair.alevel] || '')})}]));
       results = window.scienceAnalysis.analyse(rows,mapping);
       results.forEach((result, index) => {
         const subject = window.scienceAnalysis.SUBJECTS[index % 3];
@@ -54,7 +54,10 @@ function downloadWorkbook(buffer, filename) {
       let yearColumn=header.cells.findIndex(name=>/^(?:academic|exam|cohort)?year$/i.test(String(name).replace(/[^a-z]/gi,'')));
       if(yearColumn<0)yearColumn=/math/i.test(header.cells[8] || '') ? 9 : 8;
       const combined=Object.fromEntries(Object.entries(options.gcseColumns).map(([subject,column])=>[subject,/math/i.test(header.cells[column] || '') ? -1 : options.combinedColumn]));
-      return [...window.scienceTrends.aggregate(rows, options.columns, 'alevel', -1, yearColumn), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', combined, yearColumn)];
+      const alevelColumns=Object.fromEntries(Object.entries(options.columns).map(([subject,column])=>[subject,/gcse|math/i.test(header.cells[column] || '') ? header.cells.findIndex(name=>String(name).toLowerCase().includes(subject.toLowerCase()) && /alevel|a2/i.test(String(name).replace(/[^a-z0-9]/gi,''))) : column]));
+      const trends=[...window.scienceTrends.aggregate(rows, alevelColumns, 'alevel', -1, yearColumn), ...window.scienceTrends.aggregate(rows, options.gcseColumns, 'gcse', combined, yearColumn)];
+      trends.forEach(result=>{result.columnLabel=header.cells[(result.level==='gcse'?options.gcseColumns:alevelColumns)[result.subject]];});
+      return trends;
     },
     async export() {
       if (!results) throw new Error('Produce a matrix first.');

@@ -30,11 +30,11 @@ function showStudents(result, row, cell) {
   const title = node('h2', result.comparison || result.subject); title.id = 'student-dialog-title';
   const close = node('button', 'Close', 'secondary'); close.type = 'button'; close.autofocus = true;
   close.onclick = () => dialog.close(); header.append(title, close); dialog.append(header);
-  dialog.append(node('p', `GCSE ${row.grade} → A level ${cell.grade}: ${cell.percent.toFixed(1)}% (${cell.count} of ${row.total} students with this GCSE grade).`));
+  dialog.append(node('p', `GCSE ${row.grade} → ${result.outcomeLevel === 'gcse' ? 'GCSE' : 'A level'} ${cell.grade}: ${cell.percent.toFixed(1)}% (${cell.count} of ${row.total} students with this GCSE grade).`));
   if (!cell.students.length) dialog.append(node('p', 'No students have this grade combination.'));
   else {
     const table = node('table'); const thead = node('thead'); const headings = node('tr');
-    ['Student name (first column)', 'GCSE grade', 'A-level grade', 'Excel row'].forEach(text => headings.append(node('th', text))); thead.append(headings); table.append(thead);
+    ['Student name (first column)', 'GCSE grade', result.outcomeLevel === 'gcse' ? 'GCSE outcome grade' : 'A-level grade', 'Excel row'].forEach(text => headings.append(node('th', text))); thead.append(headings); table.append(thead);
     const body = node('tbody');
     for (const student of cell.students) {
       const tr = node('tr'); [student.name, student.gcse, student.alevel, student.row].forEach(value => tr.append(node('td', value))); body.append(tr);
@@ -69,7 +69,7 @@ function chooseHeader() {
   for (const subject of subjects) {
     const row = node('div', undefined, 'mapping-row'); row.append(node('strong', subject));
     for (const level of ['gcse','alevel']) {
-      const label = node('label', level === 'gcse' ? 'GCSE column' : 'A-level column');
+      const label = node('label', level === 'gcse' ? 'GCSE row column' : 'Outcome column (GCSE or A level)');
       const select = node('select'); select.id = `${subject}-${level}`; select.setAttribute('aria-label', `${subject} ${level} column`);
       const blank = node('option', 'Choose a column…'); blank.value = ''; select.append(blank);
       header.cells.forEach((name, i) => { const o = node('option', `${i+1}. ${name || '(blank header)'}`); o.value = i; select.append(o); });
@@ -117,11 +117,11 @@ function render(results) {
         if (cell.percent === null) td.append(node('strong', '—'), node('small', `${cell.count} of ${row.total}`));
         else {
           const button = node('button', undefined, 'percentage-button'); button.type = 'button';
-          button.setAttribute('aria-label', `Show ${cell.count} students: ${result.comparison || result.subject}, GCSE ${row.grade}, A level ${cell.grade}, ${cell.percent.toFixed(1)} percent`);
+          button.setAttribute('aria-label', `Show ${cell.count} students: ${result.comparison || result.subject}, GCSE ${row.grade}, ${result.outcomeLevel === 'gcse' ? 'GCSE' : 'A level'} ${cell.grade}, ${cell.percent.toFixed(1)} percent`);
           button.append(node('strong', `${cell.percent.toFixed(1)}%`), node('small', `${cell.count} of ${row.total}`));
           button.onclick = () => showStudents(result, row, cell); td.append(button);
         }
-        td.title = row.total ? `${result.subject}: ${cell.count} of ${row.total} students with GCSE ${row.grade} achieved A level ${cell.grade}.` : `No valid paired results for GCSE ${row.grade}; a percentage cannot be calculated.`;
+        td.title = row.total ? `${result.subject}: ${cell.count} of ${row.total} students with GCSE ${row.grade} achieved ${result.outcomeLevel === 'gcse' ? 'GCSE' : 'A level'} ${cell.grade}.` : `No valid paired results for GCSE ${row.grade}; a percentage cannot be calculated.`;
         tr.append(td);
       }
       body.append(tr);
@@ -131,7 +131,7 @@ function render(results) {
     card.append(node('p','GCSE grades 9–4 are always displayed, along with other grades that have valid pairs. A dash means no paired results. Percentages are rounded to one decimal place.'));
     if (result.issues.length) {
       const details = node('details'); details.append(node('summary', `Review ${result.issues.length} excluded pairs`));
-      const issues = node('table', undefined, 'issue-table'); const head = node('tr'); ['Student name','Reason','GCSE value','A-level value'].forEach(h => head.append(node('th',h))); issues.append(head);
+      const issues = node('table', undefined, 'issue-table'); const head = node('tr'); ['Student name','Reason','GCSE value',result.outcomeLevel === 'gcse' ? 'GCSE outcome value' : 'A-level value'].forEach(h => head.append(node('th',h))); issues.append(head);
       result.issues.slice(0,100).forEach(i => { const row = node('tr'); [i.name,i.reason,i.gcse,i.alevel].forEach(v => row.append(node('td',v))); issues.append(row); });
       details.append(issues); if (result.issues.length > 100) details.append(node('p','Showing the first 100 exclusions. Export to Excel for the complete list.')); card.append(details);
     }

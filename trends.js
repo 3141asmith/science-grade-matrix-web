@@ -79,7 +79,7 @@
     });
     results.forEach(result => {
       const qualification = result.level === 'gcse' ? 'GCSE' : 'A level';
-      const section = node('section',undefined,'trends-subject'); section.append(node('h3',`${result.subject} ${qualification} — ${$(`${result.subject}-${result.level}`).selectedOptions[0].textContent.replace(/^\d+\. /,'')}`));
+      const section = node('section',undefined,'trends-subject'); section.append(node('h3',`${result.subject} ${qualification} — ${result.columnLabel || $(`${result.subject}-${result.level}`).selectedOptions[0].textContent.replace(/^\d+\. /,'')}`));
       const legend = node('div',undefined,'trends-legend');
       result.grades.forEach((grade,i) => { if (result.level === 'gcse' && !/^[1-9]$/.test(grade)) return; const label = node('span',grade); const swatch = node('i'); swatch.style.backgroundColor = result.colours[i]; label.prepend(swatch); legend.append(label); }); section.append(legend);
       if (!result.years.length) section.append(node('p',`No valid year and ${qualification} grade pairs. Add a Year column (column J in the template) (for example 2024 or 2024/25).`));
