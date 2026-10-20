@@ -25,6 +25,14 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     await page.locator('#setup').waitFor({state:'visible'});
     await page.locator('#results').waitFor({state:'visible'});
     assert.equal(await page.locator('#matrices article').count(),3);
+    assert.equal(await page.locator('#matrices .grade-summary').count(),3);
+    assert.match(await page.locator('#matrices .grade-summary').first().textContent(),/A\* or A.*50.0% each/);
+    const summaries = await page.evaluate(() => {
+      const result={subject:'Physics',comparison:'GCSE Maths → Physics A Level',matrix:[{grade:'9',total:4,cells:[{grade:'A*',count:3},{grade:'A',count:1}]}]};
+      return [gradeNineSummary(result),gradeNineSummary({...result,matrix:[]})];
+    });
+    assert.match(summaries[0],/most commonly achieved A\*.*75.0%; 3 of 4/);
+    assert.match(summaries[1],/no valid paired results.*GCSE Maths/);
     await page.getByRole('button',{name:'Trends',exact:true}).click();
     await page.locator('#trends-dialog').waitFor({state:'visible'});
     assert.equal(await page.locator('#trends-dialog svg').count(),6);
