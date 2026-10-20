@@ -31,24 +31,27 @@ function analyse(rows, mapping) {
     if (!pair || !Number.isInteger(pair.gcse) || !Number.isInteger(pair.alevel) || pair.gcse < 0 || pair.alevel < 0)
       throw new Error(`Select both grade columns for ${subject}.`);
     used.push(pair.gcse, pair.alevel);
-    if (pair.gcse === pair.alevel) throw new Error(`Choose different GCSE and A-level columns for ${subject}.`);
+    if (pair.gcse === pair.alevel) throw new Error(`Choose different row and outcome columns for ${subject}.`);
   }
-  const gcseColumns = SUBJECTS.map(subject => mapping[subject].gcse);
-  if (SUBJECTS.some(subject => gcseColumns.includes(mapping[subject].alevel))) throw new Error('An A-level column cannot also be used as a GCSE column.');
   const combined = mapping.Combined?.gcse;
   if (combined !== undefined && (!Number.isInteger(combined) || combined < 0 || used.includes(combined)))
     throw new Error('Choose a separate column for Combined Science GCSE.');
   const comparisons = SUBJECTS.map(subject => ({ subject, ...mapping[subject], scale: GCSE, level: 'gcse' }));
-  return comparisons.map(({ subject, sheetName, gcse, alevel, scale, level, allowCombined = true }) => {
-    const counts = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, 0]))]));
-    const students = Object.fromEntries(scale.map(g => [g, Object.fromEntries(ALEVEL.map(a => [a, []]))]));
+  return comparisons.map(({ subject, sheetName, gcse, alevel, scale, level, allowCombined = true, outcomeLevel = 'alevel', allowOutcomeCombined = false }) => {
+    const outcomeScale = outcomeLevel === 'gcse' ? GCSE : ALEVEL;
+    const counts = Object.fromEntries(scale.map(g => [g, Object.fromEntries(outcomeScale.map(a => [a, 0]))]));
+    const students = Object.fromEntries(scale.map(g => [g, Object.fromEntries(outcomeScale.map(a => [a, []]))]));
     let included = 0, missing = 0, invalid = 0, combinedIncluded = 0;
     const issues = [];
     rows.forEach(({ number, cells }) => {
       let rawG = cells[gcse];
-      const rawA = cells[alevel];
+      let rawA = cells[alevel];
       let g = grade(rawG, level), fromCombined = false;
-      const a = grade(rawA, 'alevel');
+      let a = grade(rawA, outcomeLevel);
+      if (a == null && outcomeLevel === 'gcse' && allowOutcomeCombined && combined !== undefined) {
+        const fallback = combinedGrade(cells[combined]);
+        if (fallback != null || (a === null && fallback === undefined)) { rawA = cells[combined]; a = fallback; }
+      }
       if (g == null && combined !== undefined && allowCombined) {
         const fallback = combinedGrade(cells[combined]);
         if (fallback != null || (g === null && fallback === undefined)) {
@@ -66,11 +69,12 @@ function analyse(rows, mapping) {
         students[g][a].push({ name: String(cells[0] ?? '').trim() || '(No name supplied)', row: number, gcse: String(rawG), alevel: String(rawA), groupedGrade: g, source: fromCombined ? "Combined Science" : subject });
       }
     });
+    const visibleOutcomes = outcomeScale.filter(a => outcomeLevel !== 'gcse' || /^[1-9]$/.test(a) || scale.some(g => counts[g][a] > 0));
     const matrix = scale.map(g => {
       const total = Object.values(counts[g]).reduce((sum, n) => sum + n, 0);
-      return { grade: g, total, cells: ALEVEL.map(a => ({ grade: a, count: counts[g][a], percent: total ? counts[g][a] / total * 100 : null, students: students[g][a] })) };
+      return { grade: g, total, cells: visibleOutcomes.map(a => ({ grade: a, count: counts[g][a], percent: total ? counts[g][a] / total * 100 : null, students: students[g][a] })) };
     });
-    return { subject, sheetName: sheetName || subject, included, missing, invalid, combinedIncluded, matrix, issues };
+    return { subject, sheetName: sheetName || subject, outcomeLevel, included, missing, invalid, combinedIncluded, matrix, issues };
   });
 }
 window.scienceAnalysis = { SUBJECTS, GCSE, COMBINED, ALEVEL, grade, combinedGrade, analyse };

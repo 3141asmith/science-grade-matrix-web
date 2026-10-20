@@ -44,3 +44,8 @@ The Trends popup includes six graphs: Biology, Chemistry and Physics at both A l
 ## GCSE Maths
 
 Include GCSE Maths in column I of the original workbook. It is available in all GCSE column dropdowns, including for comparing Maths with several A-level subjects. Missing Maths grades stay missing and do not use Combined Science fallback. The template includes GCSE Maths in I and Year in J. Trends detect a Year header wherever it is located; older workbooks with Year in I remain supported. Additional spreadsheet upload and name-matching have been removed.
+
+## GCSE against GCSE
+
+Select a GCSE column in the Outcome column dropdown to compare GCSE grades with another GCSE subject, including Maths. The grid automatically switches to numeric outcome grades 9-1 and includes any letter-grade outcomes present. Counts, student popups and PDFs use the selected qualifications. Default GCSE-to-A-level comparisons are unchanged.
+

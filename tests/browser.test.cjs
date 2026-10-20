@@ -140,7 +140,7 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(await page.locator('#matrices article').count(),3);
     assert.ok((await page.locator('#matrices h3').allTextContents()).every(title => title.endsWith('Physics A Level')));
     await page.locator('#Physics-alevel').selectOption('1'); await page.locator('#calculate').click();
-    assert.match(await page.locator('#status').textContent(),/different GCSE and A-level/);
+    assert.match(await page.locator('#status').textContent(),/different row and outcome/);
     assert.ok(await page.locator('#results').isHidden());
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -192,6 +192,17 @@ catch (_) { ({ chromium } = require('../../.runtime/tools/node_modules/playwrigh
     assert.equal(await page.locator('#trends-dialog svg').count(),6);
     assert.match(await page.locator('#trends-dialog').textContent(),/2024/);
     await page.keyboard.press('Escape');
+    for (const [subject,column] of [['Physics','1'],['Biology','3'],['Chemistry','5']]) await page.locator(`#${subject}-alevel`).selectOption(column);
+    await page.locator('#calculate').click();await page.locator('#results').waitFor({state:'visible'});
+    assert.ok((await page.locator('#matrices .counts').allTextContents()).every(text=>text.startsWith('11 paired')));
+    const gcseHeads=await page.locator('#matrices article').first().locator('thead th').allTextContents();
+    assert.deepEqual(gcseHeads.slice(2,11),['9','8','7','6','5','4','3','2','1']);
+    const comparisonTitles=await page.locator('#matrices h3').allTextContents();
+    assert.ok(comparisonTitles.every(text=>text.startsWith('GCSE Maths') && !text.includes('A Level')));
+    const gcsePdfDownload=page.waitForEvent('download');await page.locator('#save-pdf').click();
+    await (await gcsePdfDownload).saveAs(path.join(out,'gcse-vs-gcse.pdf'));
+    const gcsePdf=await fs.readFile(path.join(out,'gcse-vs-gcse.pdf'));
+    assert.equal((gcsePdf.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length,3);
     assert.deepEqual(errors,[]);
     console.log('PASS: Excel import/export, six matrices, fixed rows, colours, optional Combined Science, mapping errors and mobile layout.');
   } finally { await browser.close(); }
