@@ -26,12 +26,17 @@
         pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
         pdf.text(plain(article.querySelector('.counts').textContent).replace(/·/g,' | '),12,25);
       };
-      pdf.autoTable({head,body,startY:30,margin:{top:30,right:12,bottom:23,left:12},theme:'grid',
+      pdf.autoTable({head,body,startY:30,margin:{top:30,right:12,bottom:33,left:12},theme:'grid',
         styles:{font:'helvetica',fontSize,cellPadding:rows.length > 22 ? 0.25 : 1.5,halign:'center',valign:'middle',textColor:[32,48,75],lineColor:[219,227,236],lineWidth:0.15},
         headStyles:{fillColor:[19,40,64],textColor:[255,255,255],fontStyle:'bold'},
         columnStyles:{0:{cellWidth:24,halign:'left'},1:{cellWidth:22}},rowPageBreak:'avoid',
         willDrawPage:drawHeading,
         didDrawPage:() => {
+          const summary = article.querySelector('.grade-summary');
+          if (summary) {
+            pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(19,40,64);
+            pdf.text(pdf.splitTextToSize(plain(summary.textContent),270),12,181);
+          }
           pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(70,87,108);
           const note = 'Observed proportions among valid paired results; not individual predictions. Each row has its own colour scale: green = row maximum; amber = half that maximum; red = lower positive values. 0% has no colour.';
           pdf.text(pdf.splitTextToSize(note,270),12,192);

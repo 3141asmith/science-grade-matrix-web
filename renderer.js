@@ -96,6 +96,17 @@ async function calculate() {
   status(`Analysed ${data.rows} student rows from ${workbook.name}. Each subject uses its own valid paired results.`);
   return data;
 }
+function gradeNineSummary(result) {
+  const [first = result.subject, outcome = result.subject] = (result.comparison || result.subject).split(' → ');
+  const row = result.matrix.find(row => row.grade === '9');
+  if (!row?.total) return `There are no valid paired results for students with a 9 in ${first}.`;
+  const maximum = Math.max(...row.cells.map(cell => cell.count));
+  const mostLikely = row.cells.filter(cell => cell.count === maximum);
+  const grades = mostLikely.map(cell => cell.grade).join(' or ');
+  const percentage = (maximum / row.total * 100).toFixed(1);
+  if (mostLikely.length > 1) return `In this cohort, students with a 9 in ${first} most commonly achieved ${grades} in ${outcome}, tied at ${percentage}% each (${maximum} of ${row.total} students each).`;
+  return `In this cohort, a student with a 9 in ${first} most commonly achieved ${grades} in ${outcome} (${percentage}%; ${maximum} of ${row.total} students).`;
+}
 function render(results) {
   $('matrices').replaceChildren();
   for (const result of results) {
@@ -127,6 +138,7 @@ function render(results) {
       body.append(tr);
     }
     table.append(body); const scroll = node('div', undefined, 'scroll'); scroll.append(table); card.append(scroll);
+    card.append(node('p',gradeNineSummary(result),'grade-summary'));
     if (result.matrix.some(r => r.total > 0 && r.total < 10)) card.append(node('p','Small cohorts: some rows contain fewer than 10 students, so percentages can change substantially with one result.','sample-note'));
     card.append(node('p','GCSE grades 9–4 are always displayed, along with other grades that have valid pairs. A dash means no paired results. Percentages are rounded to one decimal place.'));
     if (result.issues.length) {
